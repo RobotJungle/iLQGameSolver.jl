@@ -9,4 +9,5 @@ include("linearize_dynamics.jl")
 include("lqgame.jl")
 include("solveilqgame.jl")
 include("dynamics.jl")
+
 end # module
