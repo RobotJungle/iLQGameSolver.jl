@@ -8,12 +8,15 @@ It is still a work in progress. An example of a two differential drive mobile ro
 
 ## How to install for development
 
-Clone repo in `~/.julia/dev`
+Go to the julia development folder `~/.julia/dev`
 
 ```bash
-cd ~/.julia/dev
+    cd ~/.julia/dev
+```
 
-dev https://github.com/itsahmedkhalil/iLQGameSolver.jl.git
+Open the Julia REPL, enter the package manager using `]`, and run the following command to clone code
+```bash
+    dev https://github.com/itsahmedkhalil/iLQGameSolver.jl.git
 ```
 
 A folder called iLQGameSolver should be created and it should contain the repo. Make changes and push your code.
