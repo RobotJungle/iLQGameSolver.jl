@@ -23,22 +23,26 @@ A folder called iLQGameSolver should be created and it should contain the repo. 
 
 ## Todo list:
 
-- Add documentation, remove old code, and write report
+### Todo list:
 
-- Receding horizon
+- Add documentation and write report
 
-- Put code in .jl file instead of .ipynb 
+- Receding horizon for online trajectory optimization
 
-- Integrate the linear approximation of the nonlinear dynamics for multiple agents (linearize and discretize)
-    - Check that the point mass works using both dynamics
+- Make a better GUI for the results
+  - Graphical represenation of the robots pose and shape in plots
+  - Add TurtleBot to MeshCat or on ROS to visualize results
+
+-  ~~Put code in .jl file instead of .ipynb~~
+
+- ~~Integrate the linear approximation of the nonlinear dynamics for multiple agents (linearize and discretize)~~
+    - ~~Check that the point mass works using both dynamics~~
 
 - Add state constraints
 
-- Use differential drive kinematics to use on TurtleBots
-    - Add TurtleBot to MeshCat to visualize results
+- ~~Use differential drive kinematics to use on TurtleBots~~
 
 - Check augmented lagrangian dynamic programming for equality and inequality constraints
 
 - Monte Carlo simulations to observe Nash Equilibria solutions
-
 
