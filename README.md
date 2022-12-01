@@ -1,1 +1,1 @@
-# NewPackage.jl
+# iLQGameSolver.jl
