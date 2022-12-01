@@ -14,7 +14,7 @@ Go to the julia development folder `~/.julia/dev`
     cd ~/.julia/dev
 ```
 
-Open the Julia REPL, enter the package manager using `]`, and run the following command to clone code
+Open the Julia REPL, enter the package manager using `]`, and run the following command to clone the code
 ```bash
     dev https://github.com/itsahmedkhalil/iLQGameSolver.jl.git
 ```
