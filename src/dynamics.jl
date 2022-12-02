@@ -29,20 +29,32 @@ Differential Drive:
 State x: [x, y, θ]
 Input u: [v, ω]
 """
-# function diff_drive(x, u)
-#     #x[3] = atan(sin(x[3]),cos(x[3]))
-#     ẋ₁ = cos(x[3])*u[1]
-#     ẏ₁ = sin(x[3])*u[1]
-#     θ̇₁ = u[2]
-#     #x[6] = atan(sin(x[6]),cos(x[6]))
-#     ẋ₂ = cos(x[6])*u[3]
-#     ẏ₂ = sin(x[6])*u[3]
-#     θ̇₂ = u[4]
+function diff_drive_3D(x, u)
+    #x[3] = atan(sin(x[3]),cos(x[3]))
+    ẋ₁ = cos(x[3])*u[1]
+    ẏ₁ = sin(x[3])*u[1]
+    θ̇₁ = u[2]
+    #x[6] = atan(sin(x[6]),cos(x[6]))
+    ẋ₂ = cos(x[6])*u[3]
+    ẏ₂ = sin(x[6])*u[3]
+    θ̇₂ = u[4]
+    # l = 0.16
+    # ẋ₁ = 0.5*(u[1] + u[2])*cos(x[3])
+    # ẏ₁ = 0.5*(u[1] + u[2])*sin(x[3])
+    # θ̇₁ = (u[1] - u[2])/l
+    # v̇ᵣ₁ = u[1]
+    # v̇ₗ₁ = u[2]
 
-#     return [ẋ₁; ẏ₁; θ̇₁; ẋ₂; ẏ₂; θ̇₂]
-# end
+    # ẋ₂ = 0.5*(u[3] + u[4])*cos(x[8])
+    # ẏ₂ = 0.5*(u[3] + u[4])*sin(x[8])
+    # θ̇₂ = (u[3] - u[4])/l
+    # v̇ᵣ₂ = u[3]
+    # v̇ₗ₂ = u[4]
 
-function diff_drive(x, u)
+    return [ẋ₁; ẏ₁; θ̇₁; ẋ₂; ẏ₂; θ̇₂]#[ẋ₁; ẏ₁; θ̇₁; v̇ᵣ₁; v̇ₗ₁; ẋ₂; ẏ₂; θ̇₂; v̇ᵣ₂; v̇ₗ₂]
+end
+
+function diff_drive_4D(x, u)
     #x[3] = atan(sin(x[3]),cos(x[3]))
     ẋ₁ = cos(x[3])*x[4]
     ẏ₁ = sin(x[3])*x[4]

@@ -4,7 +4,7 @@ function solveILQGame(dynamics, costf, x₀, xgoal, u1goal, u2goal, Q1, Q2, Qn1,
 
     n = length(x₀)
     m1 = size(R11)[1]
-    m2 = size(R22)[1]
+    m2 = size(R22)[1]          
     k_steps = trunc(Int, H/dt) 
 
     x̂ = zeros(k_steps, n) # 1500 x need
@@ -101,6 +101,8 @@ function solveILQGame(dynamics, costf, x₀, xgoal, u1goal, u2goal, Q1, Q2, Qn1,
 
         # Rollout players with new control law
         xₜ, uₜ = Rollout_RK4(dynamics, x₀, x̂, û, umin, umax, H, dt, P, α, 0.5)
+
+        #@show total_cost1, total_cost2
     end
 
     return xₜ, uₜ

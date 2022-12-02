@@ -16,6 +16,28 @@ function costPointMass(Qi, Rii, Rij, Qni, x, ui, uj, xgoal, uigoal, ujgoal, dmax
     end
 end
 
+function costDiffDrive(Qi, Rii, Rij, Qni, x, ui, uj, xgoal, uigoal, ujgoal, dmax, ρ, B)
+
+    goal = x - xgoal
+    if size(Qi)[1] == 6
+        rel_dist = (x[1:2] - x[4:5])'*I*(x[1:2] - x[4:5])
+    elseif size(Qi)[1] == 8
+        rel_dist = (x[1:2] - x[5:6])'*I*(x[1:2] - x[5:6])
+    else
+        rel_dist = (x[1:2] - x[6:7])'*I*(x[1:2] - x[6:7])
+    end
+
+    if B 
+        return 0.5*goal'*Qni*goal
+    else            
+        dx = x - xgoal
+        dui = ui - uigoal
+        duj = uj - ujgoal
+        return 0.5*(dx'*Qi*dx + dui'*Rii*dui + duj'*Rij*duj) + ρ*(min(sqrt(rel_dist) - dmax, 0))^2 
+        
+    end
+end
+
 function quadratic_cost(cost_fun, Qi, Rii, Rij, Qni, x, ui, uj, xgoal, uigoal, ujgoal, dmax, ρ, B)
     """
     2nd order Taylor expansion of cost at t
