@@ -132,7 +132,8 @@ function solveILQGameRH(game::GameSolver, dynamics, costf)
         for t = 1:(k_steps-1)
             
             A, B = lin_dyn_discrete(dynamics, xₜ[t,:], uₜ[t,:], dt)
-
+            
+            ### REMOVE ME only need Bₜ
             Aₜ[:,:,t] = A
             B1ₜ[:,:,t] = B[:, 1:m1]
             B2ₜ[:,:,t] = B[:, m1+1:m1+m2] #end
