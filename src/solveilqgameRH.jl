@@ -46,7 +46,6 @@ end
 
 
 function solveILQGameRH(game::GameSolver, dynamics, costf)
-
     nx = game.nx
     nu = game.nu
     Nplayer = game.Nplayer
@@ -90,7 +89,7 @@ function solveILQGameRH(game::GameSolver, dynamics, costf)
     # R[timestep in k_steps][index of matrix in vector]
     Rₜ = [game.R for _ = 1:k_steps] # Added
     Qₜ = [game.Q for _ = 1:k_steps] # Added
-    rₜ = zeros(Float32, (Nu, k_steps)) # Added 25x slower than zeros()
+    rₜ = zeros(Float32, (Nu, k_steps)) # Added 
 
     R11ₜ = zeros(Float32, (m1, m1, k_steps))
     R12ₜ = zeros(Float32, (m1, m2, k_steps))
@@ -102,6 +101,10 @@ function solveILQGameRH(game::GameSolver, dynamics, costf)
     r22ₜ = zeros(Float32, (m2, k_steps))
     r21ₜ = zeros(Float32, (m2, k_steps))
 
+    Q = game.Q
+    R = game.R
+    Qn = game.Qn
+    
     ### Hardcode:
     Q1 = game.Q[1]
     Q2 = game.Q[2]
@@ -131,14 +134,15 @@ function solveILQGameRH(game::GameSolver, dynamics, costf)
         u2ₜ = uₜ[:, m1+1:m1+m2]
         for t = 1:(k_steps-1)
             
-            A, B = lin_dyn_discrete(dynamics, xₜ[t,:], uₜ[t,:], dt)
-            
-            ### REMOVE ME only need Bₜ
-            Aₜ[:,:,t] = A
-            B1ₜ[:,:,t] = B[:, 1:m1]
-            B2ₜ[:,:,t] = B[:, m1+1:m1+m2] #end
+            # Why are we linearizing here??
+            Aₜ[:,:,t], Bₜ[:,:,t] = lin_dyn_discrete(dynamics, xₜ[t,:], uₜ[t,:], dt)
 
             #Player 1 cost
+
+            # for i = 1:Nplayer
+            #     costval, Q[t][i], l[t][i], R[t], r[t] = quadratic_cost(costf, i, Q[i], R[i], R[Not(i)], Qn[i], x, u, u, x, )
+            #     total_cost[i] += costval
+
             costval1, Q1ₜ[:,:,t], l1ₜ[:,t], R11ₜ[:,:,t], r11ₜ[:,t], R12ₜ[:,:,t], r12ₜ[:,t] = 
             quadratic_cost(costf, Q1, R11, R12, Qn1, xₜ[t,:], u1ₜ[t,:], u2ₜ[t,:], xgoal, u1goal, u2goal, dmax, ρ, false)
             
