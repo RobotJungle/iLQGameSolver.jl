@@ -1,81 +1,94 @@
 using LinearAlgebra
+using InvertedIndices
 
 
-function lqGame!(Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps, Nplayers)
+function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps, Nplayers)
     """
-    n = total number of states for both players
-    m = number of inputs for each player
+    n = total number of states for each players
+    m = total number of inputs for each player
+    Nx = total number of states for all players (Nplayers*n)
+    Nu = total number of inputs for all players (Nplayers*m)
+    k_steps = number of knot points in time horizon
+    u is mx1
     Input
-    Ad is an nxn matrix (8x8)
-    B1d is an nxm matrix (8x2)
-    B2d is an nxm matrix (8x2)
-    u is mx1 (2x1)
-    Q1 is an nxn matrix (8x8)
-    Q2 is an nxn matrix (8x8)
-    l1 is a 8x1
-    R11 is an mxm matrix (2x2)
-    R12 is an mxm matrix (2x2)
-    R21 is an mxm matrix (2x2)
-    R22 is an mxm matrix (2x2)
+    Aₜ is an k_steps by Nx by Nx matrix (k_steps, Nx, Nx)
+    Bₜ is an k_steps by Nx by Nu matrix (k_steps, Nx, Nu)
+    Qₜ is an k_steps by Nx by Nx matrix (k_steps, Nx, Nx)
+    lₜ is an k_steps by Nx by 1 matrix (k_steps, Nx, )
+    Rₜ is an k_steps by Nplayers by Nplayers matrix (2x2)
+    i.e. Rₜ[1]:
+    [
+        [R11] [R12] [R13] ... [R1 Nplayers]
+        [R21] [R22] [R23] ... [R2 Nplayers]
+          .     .     .
+          .     .          .
+          .     .               .
+        [R Nplayers 1] [R Nplayers 2] [R Nplayers 3] ... [R Nplayers Nplayers]
+    ] where Rij are matrices
+    rₜ is an k_steps by Nplayers by Nplayers (k_steps, Nplayers, Nplayers)
+    Similar to Rₜ but rij are vectors 
     Output
     P₁ is an mxn matrix (2x8)
     P₂ is an mxn matrix (2x8)
     α₁ (1x2)
     ζ₁ is an nx1 matrix (8x1)
     """
-    n, m = size(B1ₜ)
+    nx = game.nx
+    nu = game.nu
+    Nx = game.Nx
+    Nu = game.Nu
+    #Nx, Nu = size(Bₜ)
 
-    V = copy(Qₜ[:,:,end]) # At last time step
+    V = copy(Qₜ[end,:,:])[1] # At last time step
 
-    ζ = copy(lₜ[:,end]) # At last time step
+    ζ = copy(lₜ[end,:])[1] # At last time step
 
-    P = zeros(Float32, (m, n, k_steps))
+    P = zeros(Float32, (k_steps, Nu, Nx))
     
-    α = zeros(Float32, (m, k_steps))
+    α = zeros(Float32, (k_steps, Nu))
+
+    #S = deepcopy(Rₜ[1]) #!Very Bad
+    S = zeros(Nu, Nu)
+    Y = zeros(Nu, Nx)
+    Yα = zeros(Nu)
 
     for t in (k_steps-1):-1:1
-        # solving for Ps, check equation 19 in document
+        # solving for Ps,αs check equation 19 in document
         for i in 1:Nplayers
-            S[i] = Rₜ[i,i,t] + (B1ₜ[:,:,t]' * V * B1ₜ[:,:,t])
-            S11 = R11ₜ[:,:,t] + (B1ₜ[:,:,t]' * V₁ * B1ₜ[:,:,t]) #2x2
-            S12 = B1ₜ[:,:,t]' * V₁ * B2ₜ[:,:,t] # 2x2
+            Ni = 1+(i-1)*nu     # Player i's start index
+            Nf = i*nu           # Player i's final index
+            # left hand side of the matrix
+            S[Ni:Nf,Ni:Nf] = Rₜ[t][i,i] + (Bₜ[t,:,Ni:Nf]' * V[i] * Bₜ[t,:,Ni:Nf])     #[Sii, .., ..]
+            S[Ni:Nf,Not(Ni:Nf)] = Bₜ[t,:,Ni:Nf]' * V[i] * Bₜ[t,:,Not(Ni:Nf)]         #[.., Sij]
             
-            S22 = R22ₜ[:,:,t] + (B2ₜ[:,:,t]' * V₂ * B2ₜ[:,:,t])
-            S21 = B2ₜ[:,:,t]' * V₂ * B1ₜ[:,:,t]
-            S = [S11 S12; S21 S22] # 4x4
-            Y1 = B1ₜ[:,:,t]' * V₁ * Aₜ[:,:,t] # 2x8
-            Y2 = B2ₜ[:,:,t]' * V₂ * Aₜ[:,:,t] 
-            Y = [Y1; Y2] # 4 x 8
-            P = S\Y # 4x8
-            P₁[:,:,t] = P[1:m, :]
-            P₂[:,:,t] = P[m+1:2*m, :]
+            # right hand side of the matrix
+            Y = Bₜ[t,:,:]' * V[i] * Aₜ[t,:,:]            # right side for Ps       
+            Yα = (Bₜ[t,:,:]' * ζ[i]) + rₜ[t][i,i]        # right side for αs Nu by Nx by 1
+        end
+
+        P[t,:,:] = S\Y     # Nu by Nx
+        α[t,:] = S\Yα    # Nu by 1
             
-            # solve for αs (right hand side of the eqn)
-            Yα1 = (B1ₜ[:,:,t]' * ζ₁) + r11ₜ[:,t] # 2x2
-            Yα2 = (B2ₜ[:,:,t]' * ζ₂) + r22ₜ[:,t] # 2x2
-            Yα = [Yα1; Yα2]  # 4x2
-            α = S\Yα # 4x2
-            α₁[:,t] = α[1:m, :]
-            α₂[:,t] = α[m+1:2*m, :]
         
-        #Update value function(s)
-        Fₜ = Aₜ[:,:,t] - (B1ₜ[:,:,t]*P₁[:,:,t] + B2ₜ[:,:,t]*P₂[:,:,t])
+        # Update value function(s)
+        Fₜ = Aₜ[t,:,:] - (Bₜ[t,:,:]*P[t,:,:])    # Nx by Nu 
         
-        βₜ = - (B1ₜ[:,:,t] * α₁[:,t] + B2ₜ[:,:,t] * α₂[:,t])
+        βₜ = - (Bₜ[t,:,:] * α[t,:])
         
-        ζ₁ = l1ₜ[:,t] + ((P₁[:,:,t]' * R11ₜ[:,:,t] * α₁[:,t]) - (P₁[:,:,t]' * r11ₜ[:,t])) + 
-            ((P₂[:,:,t]' * R12ₜ[:,:,t] * α₂[:,t]) - (P₂[:,:,t]' * r12ₜ[:,t])) + Fₜ'*(ζ₁ + (V₁ * βₜ))
-        
-        ζ₂ = l2ₜ[:,t] + ((P₁[:,:,t]' * R21ₜ[:,:,t] * α₁[:,t]) - (P₁[:,:,t]' * r21ₜ[:,t])) + 
-            ((P₂[:,:,t]' * R22ₜ[:,:,t] * α₂[:,t]) - (P₂[:,:,t]' * r22ₜ[:,t])) + Fₜ'*(ζ₂ + (V₂ * βₜ))
-        
-        V₁ = Q1ₜ[:,:,t] + (P₁[:,:,t]' * R11ₜ[:,:,t] * P₁[:,:,t]) + 
-            (P₂[:,:,t]' * R12ₜ[:,:,t] * P₂[:,:,t]) + (Fₜ' * V₁ * Fₜ)
-        
-        V₂ = Q2ₜ[:,:,t] + (P₁[:,:,t]' * R21ₜ[:,:,t] * P₁[:,:,t]) + 
-            (P₂[:,:,t]' * R22ₜ[:,:,t] * P₂[:,:,t]) + (Fₜ' * V₂ * Fₜ)
+        for i in 1:Nplayers
+            Ni = 1+(i-1)*nu     # Player i's start index
+            Nf = i*nu           # Player i's final index
+            Rij = Diagonal(repeat(Rₜ[t][Ni:Nf,:],3))
+
+            # update zeta
+            ζ[i] = lₜ[t][i] + ((P[t,:,:]' * Rij * α[t,:]) - (P[t,:,:]' * rₜ[t][i,i])) + Fₜ'*(ζ[i] + (V[i] * βₜ))
+
+            # update value
+            V[i] = Qₜ[t][i] + (P[t,:,:]' * Rij * P[t,:,:]) + (Fₜ' * V[i] * Fₜ)
+        end
+
     end
-    return P₁, P₂, α₁, α₂
+    return P, α
 end
 
 

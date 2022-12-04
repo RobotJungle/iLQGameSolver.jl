@@ -48,7 +48,7 @@ function lqGame!(Aₜ, B1ₜ, B2ₜ, Q1ₜ, Q2ₜ, l1ₜ, l2ₜ, R11ₜ, R12ₜ,
         Y2 = B2ₜ[:,:,t]' * V₂ * Aₜ[:,:,t] 
         Y = [Y1; Y2] # 4 x 8
         P = S\Y # 4x8
-        P₁[:,:,t] = P[1:m, :]
+        P₁[:,:,t] = P[1:m, :] #2x8
         P₂[:,:,t] = P[m+1:2*m, :]
         
         # solve for αs (right hand side of the eqn)
