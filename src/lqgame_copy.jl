@@ -2,7 +2,7 @@ using LinearAlgebra
 using InvertedIndices
 
 
-function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps, Nplayers)
+function lqGameRH!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps)
     """
     n = total number of states for each players
     m = total number of inputs for each player
@@ -35,13 +35,14 @@ function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps, 
     """
     nx = game.nx
     nu = game.nu
-    Nx = game.Nx
-    Nu = game.Nu
+    Nplayer = game.Nplayer
+    Nx = nx * Nplayer
+    Nu = nu * Nplayer
     #Nx, Nu = size(Bₜ)
 
-    V = copy(Qₜ[end,:,:])[1] # At last time step
+    V = copy(Qₜ[end,:,:]) # At last time step
 
-    ζ = copy(lₜ[end,:])[1] # At last time step
+    ζ = copy(lₜ[end,:,:]) # At last time step
 
     P = zeros(Float32, (k_steps, Nu, Nx))
     
@@ -54,18 +55,21 @@ function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps, 
 
     for t in (k_steps-1):-1:1
         # solving for Ps,αs check equation 19 in document
-        for i in 1:Nplayers
-            Ni = 1+(i-1)*nu     # Player i's start index
-            Nf = i*nu           # Player i's final index
+        for i in 1:Nplayer
+            nui = 1+(i-1)*nu     # Player i's start index
+            nuf = i*nu           # Player i's final index
+
+            Nxi = 1+(i-1)*Nx     # Player i's state start index
+            Nxf = i*Nx           # Player i's state final index
+
             # left hand side of the matrix
-            S[Ni:Nf,Ni:Nf] = Rₜ[t][i,i] + (Bₜ[t,:,Ni:Nf]' * V[i] * Bₜ[t,:,Ni:Nf])     #[Sii, .., ..]
-            S[Ni:Nf,Not(Ni:Nf)] = Bₜ[t,:,Ni:Nf]' * V[i] * Bₜ[t,:,Not(Ni:Nf)]         #[.., Sij]
+            S[nui:nuf,nui:nuf] = Rₜ[t,nui:nuf,nui:nuf] + (Bₜ[t,:,nui:nuf]' * V[Nxi:Nxf,:] * Bₜ[t,:,nui:nuf])     #[Sii, .., ..]
+            S[nui:nuf,Not(nui:nuf)] = Bₜ[t,:,nui:nuf]' * V[Nxi:Nxf,:] * Bₜ[t,:,Not(nui:nuf)]         #[.., Sij]
             
             # right hand side of the matrix
-            Y = Bₜ[t,:,:]' * V[i] * Aₜ[t,:,:]            # right side for Ps       
-            Yα = (Bₜ[t,:,:]' * ζ[i]) + rₜ[t][i,i]        # right side for αs Nu by Nx by 1
+            Y = Bₜ[t,:,:]' * V[Nxi:Nxf,:] * Aₜ[t,:,:]            # right side for Ps       
+            Yα = (Bₜ[t,:,:]' * ζ[:,i]) + rₜ[t,:,i]        # right side for αs Nu by Nx by 1
         end
-
         P[t,:,:] = S\Y     # Nu by Nx
         α[t,:] = S\Yα    # Nu by 1
             
@@ -75,16 +79,19 @@ function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps, 
         
         βₜ = - (Bₜ[t,:,:] * α[t,:])
         
-        for i in 1:Nplayers
-            Ni = 1+(i-1)*nu     # Player i's start index
-            Nf = i*nu           # Player i's final index
-            Rij = Diagonal(repeat(Rₜ[t][Ni:Nf,:],3))
+        for i in 1:Nplayer
+            nui = 1+(i-1)*nu     # Player i's start index
+            nuf = i*nu           # Player i's final index
+            Nxi = 1+(i-1)*Nx     # Player i's state start index
+            Nxf = i*Nx           # Player i's state final index
+
+            Rij = Diagonal(repeat(Rₜ[t,nui:nuf,:], Nplayer))
 
             # update zeta
-            ζ[i] = lₜ[t][i] + ((P[t,:,:]' * Rij * α[t,:]) - (P[t,:,:]' * rₜ[t][i,i])) + Fₜ'*(ζ[i] + (V[i] * βₜ))
+            ζ[:,i] = lₜ[t,:,i] + ((P[t,:,:]' * Rij * α[t,:]) - (P[t,:,:]' * rₜ[t,:,i])) + Fₜ'*(ζ[:,i] + (V[Nxi:Nxf,:] * βₜ))
 
             # update value
-            V[i] = Qₜ[t][i] + (P[t,:,:]' * Rij * P[t,:,:]) + (Fₜ' * V[i] * Fₜ)
+            V[Nxi:Nxf,:] = Qₜ[t,Nxi:Nxf,:] + (P[t,:,:]' * Rij * P[t,:,:]) + (Fₜ' * V[Nxi:Nxf,:] * Fₜ)
         end
 
     end
@@ -92,7 +99,7 @@ function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps, 
 end
 
 
-function Rollout_RK4(fun, x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
+function Rollout_RK4_RH(fun, x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
     """
     Rollout dynamics with initial state x₀ 
     and control law u = -Px - α
@@ -107,8 +114,9 @@ function Rollout_RK4(fun, x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
     xₜ[1,:] .= x₀
     for t=1:(k_steps-1)
         # WHAT IS x̂ in xₜ[t,:] - x̂
-        #uₜ[t,:] .= clamp.([0,0] - P[:,:,t]*(xₜ[t,:] - [20,20,0,0]) - α[:,t], umin, umax)
-        uₜ[t,:] .= clamp.(û[t,:] - P[:,:,t]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[:,t], umin, umax)
+        #uₜ[t,:] .(= clamp.([0,0] - P[:,:,t]*(xₜ[t,:] - [20,20,0,0]) - α[:,t], umin, umax)
+        # @show size(uₜ[t,:]), size(P[t,:,:]), size((xₜ[t,:] - x̂[t,:]))
+        uₜ[t,:] .= clamp.(û[t,:] - P[t,:,:]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[t,:], umin, umax)
         k1 = fun(xₜ[t,:], uₜ[t,:])
         k2 = fun(xₜ[t,:] + 0.5*dt*k1, uₜ[t,:])
         k3 = fun(xₜ[t,:] + 0.5*dt*k2, uₜ[t,:])
@@ -119,7 +127,7 @@ function Rollout_RK4(fun, x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
     return xₜ, uₜ
 end
 
-function rollout_PM(x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
+function rollout_PM_RH(x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
 
     m₁ = 1
     m₂ = 1
@@ -153,10 +161,13 @@ function rollout_PM(x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
 end
 
 
-function isConverged(current, last; tol = 1e-4)
+function isConverged_RH(current, last; tol = 1e-4)
     if norm(current - last) > tol
         return false
     else 
         return true
     end
 end
+
+
+#############################################

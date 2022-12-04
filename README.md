@@ -25,6 +25,12 @@ A folder called iLQGameSolver should be created and it should contain the repo. 
 
 ### Todo list:
 
+
+Important:
+
+- Generalize for multiple agents:
+    - Pass the dynamics function manually. Looping over each agent is inefficient. 
+
 - Add documentation and write report
 
 - Receding horizon for online trajectory optimization

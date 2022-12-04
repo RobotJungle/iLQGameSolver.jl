@@ -10,6 +10,9 @@ include("lqgame.jl")
 include("solveilqgame.jl")
 include("dynamics.jl")
 include("solveilqgameRH.jl")
+include("lqgame_copy.jl")
+include("GameDynamics.jl")
+
 # include("recedingHorizon.jl")
 # include("closedloop.jl")
 

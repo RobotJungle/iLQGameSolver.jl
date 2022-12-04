@@ -27,11 +27,11 @@ function Bd(dynamics, x, u, dt)
     return B
 end
 
-function lin_dyn_discreteRH(fun, x, u, dt)
-    A = ForwardDiff.jacobian(dx -> fun(Dynamics, dx, u, true), x)
-    B = ForwardDiff.jacobian(du -> fun(Dynamics, x, du, false), u)
-    A = dt .* A + I
-    B = dt .* B
+function lin_dyn_discreteRH(dynamics, param, x, u)
+    A = ForwardDiff.jacobian(dx -> dynamics(param, dx, u, true), x)
+    B = ForwardDiff.jacobian(du -> dynamics(param, x, du, false), u)
+    A = param.dt .* A + I
+    B = param.dt .* B
     return A, B
 end
 

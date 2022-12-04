@@ -9,7 +9,7 @@ State x: [x, y, ẋ, ẏ]
 Input u: [FX, Fy]
 """
 
-function point_mass(x, u)
+function point_massOld(x, u)
     c = 0.1     # Damping coefficient [N-s/m]
     m = 1.0     # Mass [kg]
     ẋ₁ = x[3]
@@ -132,3 +132,25 @@ function quadcopter(x, u)
     return [ẋ₁; ẏ₁; ż₁; ẍ₁; ÿ₁; z̈₁; ϕ̇₁; θ̇₁; Ψ̇₁; ẋ₂; ẏ₂; ż₂; ẍ₂; ÿ₂; z̈₂; ϕ̇₂; θ̇₂; Ψ̇₂]
 
 end
+
+
+
+####################################################
+
+function point_massRH(x, u)
+    c = 0.1     # Damping coefficient [N-s/m]
+    m = 1.0     # Mass [kg]
+    ẋ₁ = x[3]
+    ẍ₁ = -(c/m)*ẋ₁ + u[1]/(m)   
+    ẏ₁ = x[4]
+    ÿ₁ = -(c/m)*ẏ₁ + u[2]/(m)  
+    ẋ₂ = x[7]
+    ẍ₂ = -(c/m)*ẋ₂ + u[3]/(m)   
+    ẏ₂ = x[8]
+    ÿ₂ = -(c/m)*ẏ₂ + u[4]/(m)  
+    ẋ₃ = x[11]
+    ẍ₃ = -(c/m)*ẋ₃ + u[5]/(m)   
+    ẏ₃ = x[12]
+    ÿ₃ = -(c/m)*ẏ₃ + u[6]/(m)  
+    return [ẋ₁; ẏ₁; ẍ₁; ÿ₁; ẋ₂; ẏ₂; ẍ₂; ÿ₂; ẋ₃; ẏ₃; ẍ₃; ÿ₃]
+end;

@@ -9,6 +9,7 @@ struct MultiAgentDynamics
     nx::Int64           # Number of states for each player
     nu::Int64           # Number of inputs for each player
     Nplayers::Int64     # Total number of players
+    dt::Float32         # Timestep [s]
 end
 
 """
@@ -18,13 +19,13 @@ State x: [x, y, ẋ, ẏ]
 Input u: [Fx, Fy]
 """
 
-function point_mass(dynamics::MultiAgentDynamics , x, u, B)
+function point_mass(dynamics::MultiAgentDynamics, x, u, B)
     Nx = dynamics.nx
     Nu = dynamics.nu
     Nplayers = dynamics.Nplayers
     @assert Nx*Nplayers == length(x) "State input doesn't match size of definition"
     @assert Nu*Nplayers == length(u) "Control input doesn't match size of definition"
-    c = 0.2     # Damping coefficient [N-s/m]
+    c = 0.1     # Damping coefficient [N-s/m]
     m = 1.0     # Mass [kg]
     if B
         xₖ = zeros(eltype(x), Nplayers*Nx)
