@@ -1,3 +1,5 @@
+[![CI](https://github.com/itsahmedkhalil/iLQGameSolver.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/itsahmedkhalil/iLQGameSolver.jl/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/itsahmedkhalil/iLQGameSolver.jl/branch/main/graph/badge.svg?token=ZCZYZGCH2T)](https://codecov.io/gh/itsahmedkhalil/iLQGameSolver.jl)
 # Iterative Linear-Quadratic Game Solver for Multi-Agent Nonlinear Robotic Interactions
 
 This repo is inspired by [ilqgames](https://arxiv.org/abs/1909.04694), efficient iterative linear-quadratic approxmiations for nonlinear multi-player general-sum differential games. 
