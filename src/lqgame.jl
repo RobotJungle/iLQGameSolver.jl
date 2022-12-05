@@ -23,58 +23,58 @@ function lqGame!(Aₜ, B1ₜ, B2ₜ, Q1ₜ, Q2ₜ, l1ₜ, l2ₜ, R11ₜ, R12ₜ,
     α₁ (1x2)
     ζ₁ is an nx1 matrix (8x1)
     """
-    n, m = size(B1ₜ)
+    ~, n, m = size(B1ₜ)
 
-    V₁ = copy(Q1ₜ[:,:,end]) # At last time step
-    V₂ = copy(Q2ₜ[:,:,end]) # At last time step
+    V₁ = copy(Q1ₜ[end,:,:]) # At last time step
+    V₂ = copy(Q2ₜ[end,:,:]) # At last time step
 
-    ζ₁ = copy(l1ₜ[:,end]) # At last time step
-    ζ₂ = copy(l2ₜ[:,end]) # At last time step
+    ζ₁ = copy(l1ₜ[end,:]) # At last time step
+    ζ₂ = copy(l2ₜ[end,:]) # At last time step
 
-    P₁ = zeros(Float32, (m, n, k_steps))
-    P₂ = zeros(Float32, (m, n, k_steps))
+    P₁ = zeros(Float32, (k_steps, m, n))
+    P₂ = zeros(Float32, (k_steps, m, n))
     
-    α₁ = zeros(Float32, (m, k_steps))
-    α₂ = zeros(Float32, (m, k_steps))
+    α₁ = zeros(Float32, (k_steps, m))
+    α₂ = zeros(Float32, (k_steps, m))
 
     for t in (k_steps-1):-1:1
         # solving for Ps, check equation 19 in document
-        S11 = R11ₜ[:,:,t] + (B1ₜ[:,:,t]' * V₁ * B1ₜ[:,:,t]) #2x2
-        S12 = B1ₜ[:,:,t]' * V₁ * B2ₜ[:,:,t] # 2x2
-        S22 = R22ₜ[:,:,t] + (B2ₜ[:,:,t]' * V₂ * B2ₜ[:,:,t])
-        S21 = B2ₜ[:,:,t]' * V₂ * B1ₜ[:,:,t]
+        S11 = R11ₜ[t,:,:] + (B1ₜ[t,:,:]' * V₁ * B1ₜ[t,:,:]) #2x2
+        S12 = B1ₜ[t,:,:]' * V₁ * B2ₜ[t,:,:] # 2x2
+        S22 = R22ₜ[t,:,:] + (B2ₜ[t,:,:]' * V₂ * B2ₜ[t,:,:])
+        S21 = B2ₜ[t,:,:]' * V₂ * B1ₜ[t,:,:]
         S = [S11 S12; S21 S22] # 4x4
-        Y1 = B1ₜ[:,:,t]' * V₁ * Aₜ[:,:,t] # 2x8
-        Y2 = B2ₜ[:,:,t]' * V₂ * Aₜ[:,:,t] 
+        Y1 = B1ₜ[t,:,:]' * V₁ * Aₜ[t,:,:] # 2x8
+        Y2 = B2ₜ[t,:,:]' * V₂ * Aₜ[t,:,:] 
         Y = [Y1; Y2] # 4 x 8
         P = S\Y # 4x8
-        P₁[:,:,t] = P[1:m, :] #2x8
-        P₂[:,:,t] = P[m+1:2*m, :]
+        P₁[t,:,:] = P[1:m, :] #2x8
+        P₂[t,:,:] = P[m+1:2*m, :]
         
         # solve for αs (right hand side of the eqn)
-        Yα1 = (B1ₜ[:,:,t]' * ζ₁) + r11ₜ[:,t] # 2x2
-        Yα2 = (B2ₜ[:,:,t]' * ζ₂) + r22ₜ[:,t] # 2x2
+        Yα1 = (B1ₜ[t,:,:]' * ζ₁) + r11ₜ[t,:] # 2x2
+        Yα2 = (B2ₜ[t,:,:]' * ζ₂) + r22ₜ[t,:] # 2x2
         Yα = [Yα1; Yα2]  # 4x2
         α = S\Yα # 4x2
-        α₁[:,t] = α[1:m, :]
-        α₂[:,t] = α[m+1:2*m, :]
+        α₁[t,:] = α[1:m, :]
+        α₂[t,:] = α[m+1:2*m, :]
         
         #Update value function(s)
-        Fₜ = Aₜ[:,:,t] - (B1ₜ[:,:,t]*P₁[:,:,t] + B2ₜ[:,:,t]*P₂[:,:,t])
+        Fₜ = Aₜ[t,:,:] - (B1ₜ[t,:,:]*P₁[t,:,:] + B2ₜ[t,:,:]*P₂[t,:,:])
         
-        βₜ = - (B1ₜ[:,:,t] * α₁[:,t] + B2ₜ[:,:,t] * α₂[:,t])
+        βₜ = - (B1ₜ[t,:,:] * α₁[t,:] + B2ₜ[t,:,:] * α₂[t,:])
         
-        ζ₁ = l1ₜ[:,t] + ((P₁[:,:,t]' * R11ₜ[:,:,t] * α₁[:,t]) - (P₁[:,:,t]' * r11ₜ[:,t])) + 
-            ((P₂[:,:,t]' * R12ₜ[:,:,t] * α₂[:,t]) - (P₂[:,:,t]' * r12ₜ[:,t])) + Fₜ'*(ζ₁ + (V₁ * βₜ))
+        ζ₁ = l1ₜ[t,:] + ((P₁[t,:,:]' * R11ₜ[t,:,:] * α₁[t,:]) - (P₁[t,:,:]' * r11ₜ[t,:])) + 
+            ((P₂[t,:,:]' * R12ₜ[t,:,:] * α₂[t,:]) - (P₂[t,:,:]' * r12ₜ[t,:])) + Fₜ'*(ζ₁ + (V₁ * βₜ))
         
-        ζ₂ = l2ₜ[:,t] + ((P₁[:,:,t]' * R21ₜ[:,:,t] * α₁[:,t]) - (P₁[:,:,t]' * r21ₜ[:,t])) + 
-            ((P₂[:,:,t]' * R22ₜ[:,:,t] * α₂[:,t]) - (P₂[:,:,t]' * r22ₜ[:,t])) + Fₜ'*(ζ₂ + (V₂ * βₜ))
+        ζ₂ = l2ₜ[t,:] + ((P₁[t,:,:]' * R21ₜ[t,:,:] * α₁[t,:]) - (P₁[t,:,:]' * r21ₜ[t,:])) + 
+            ((P₂[t,:,:]' * R22ₜ[t,:,:] * α₂[t,:]) - (P₂[t,:,:]' * r22ₜ[t,:])) + Fₜ'*(ζ₂ + (V₂ * βₜ))
         
-        V₁ = Q1ₜ[:,:,t] + (P₁[:,:,t]' * R11ₜ[:,:,t] * P₁[:,:,t]) + 
-            (P₂[:,:,t]' * R12ₜ[:,:,t] * P₂[:,:,t]) + (Fₜ' * V₁ * Fₜ)
+        V₁ = Q1ₜ[t,:,:] + (P₁[t,:,:]' * R11ₜ[t,:,:] * P₁[t,:,:]) + 
+            (P₂[t,:,:]' * R12ₜ[t,:,:] * P₂[t,:,:]) + (Fₜ' * V₁ * Fₜ)
         
-        V₂ = Q2ₜ[:,:,t] + (P₁[:,:,t]' * R21ₜ[:,:,t] * P₁[:,:,t]) + 
-            (P₂[:,:,t]' * R22ₜ[:,:,t] * P₂[:,:,t]) + (Fₜ' * V₂ * Fₜ)
+        V₂ = Q2ₜ[t,:,:] + (P₁[t,:,:]' * R21ₜ[t,:,:] * P₁[t,:,:]) + 
+            (P₂[t,:,:]' * R22ₜ[t,:,:] * P₂[t,:,:]) + (Fₜ' * V₂ * Fₜ)
     end
     return P₁, P₂, α₁, α₂
 end
@@ -95,8 +95,8 @@ function Rollout_RK4(fun, x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
     xₜ[1,:] .= x₀
     for t=1:(k_steps-1)
         # WHAT IS x̂ in xₜ[t,:] - x̂
-        #uₜ[t,:] .= clamp.([0,0] - P[:,:,t]*(xₜ[t,:] - [20,20,0,0]) - α[:,t], umin, umax)
-        uₜ[t,:] .= clamp.(û[t,:] - P[:,:,t]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[:,t], umin, umax)
+        #uₜ[t,:] .= clamp.([0,0] - P[t,:,:]*(xₜ[t,:] - [20,20,0,0]) - α[t,:], umin, umax)
+        uₜ[t,:] .= clamp.(û[t,:] - P[t,:,:]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[t,:], umin, umax)
         k1 = fun(xₜ[t,:], uₜ[t,:])
         k2 = fun(xₜ[t,:] + 0.5*dt*k1, uₜ[t,:])
         k3 = fun(xₜ[t,:] + 0.5*dt*k2, uₜ[t,:])
@@ -129,12 +129,12 @@ function rollout_PM(x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
     u2ₜ = zeros(k_steps, m) 
     xₜ[1,:] .= x₀
     for t=1:(k_steps-1)
-        u1ₜ[t,:] .= clamp.(û[1][t,:] - P[1][:,:,t]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[1][:,t], umin, umax)
-        u2ₜ[t,:] .= clamp.(û[2][t,:] - P[2][:,:,t]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[2][:,t], umin, umax)
+        u1ₜ[t,:] .= clamp.(û[1][t,:] - P[1][t,:,:]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[1][t,:], umin, umax)
+        u2ₜ[t,:] .= clamp.(û[2][t,:] - P[2][t,:,:]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[2][t,:], umin, umax)
         ## Hardcode
         xₜ[t+1,:] .= Ad*xₜ[t,:] + B1d*u1ₜ[t,:] + B2d*u2ₜ[t,:]
-#         u1ₜ[t,:] .= clamp.([0,0] - P[1][:,:,t]*(x̂[t,:] - xgoal) - α_scale*α[1][:,t], umin, umax)
-#         u2ₜ[t,:] .= clamp.([0,0] - P[2][:,:,t]*(x̂[t,:] - xgoal) - α_scale*α[2][:,t], umin, umax)
+#         u1ₜ[t,:] .= clamp.([0,0] - P[1][t,:,:]*(x̂[t,:] - xgoal) - α_scale*α[1][t,:], umin, umax)
+#         u2ₜ[t,:] .= clamp.([0,0] - P[2][t,:,:]*(x̂[t,:] - xgoal) - α_scale*α[2][t,:], umin, umax)
 #         xₜ[t+1,:] .= xgoal + Ad*(x̂[t,:] - xgoal) + B1d*(u1ₜ[t,:] - [0,0]) + B2d*(u1ₜ[t,:] - [0,0])
     end
     return xₜ, u1ₜ, u2ₜ

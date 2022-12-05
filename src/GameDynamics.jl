@@ -19,25 +19,28 @@ State x: [x, y, ẋ, ẏ]
 Input u: [Fx, Fy]
 """
 
-function point_mass(dynamics::MultiAgentDynamics, x, u, B)
-    Nx = dynamics.nx
-    Nu = dynamics.nu
-    Nplayers = dynamics.Nplayers
-    @assert Nx*Nplayers == length(x) "State input doesn't match size of definition"
-    @assert Nu*Nplayers == length(u) "Control input doesn't match size of definition"
+function point_mass(game::GameSolver, x, u, B)
+    nx = game.nx
+    nu = game.nu
+    Nplayer = game.Nplayer
+    Nx = Nplayer*nx
+    Nu = Nplayer*nu
+    @assert Nx == length(x) "State input doesn't match size of definition"
+    @assert Nu == length(u) "Control input doesn't match size of definition"
+
     c = 0.1     # Damping coefficient [N-s/m]
     m = 1.0     # Mass [kg]
     if B
-        xₖ = zeros(eltype(x), Nplayers*Nx)
+        xₖ = zeros(eltype(x), Nx)
     else
-        xₖ = zeros(eltype(u), Nplayers*Nx)
+        xₖ = zeros(eltype(u), Nx)
     end
-    for i in 1:Nplayers
-        ẋ = x[Nx*i - 1]
-        ẍ = -(c/m)*ẋ + u[Nu*i - 1]/m
-        ẏ = x[Nx*i]
-        ÿ = -(c/m)*ẏ + u[Nu*i]/m
-        xₖ[1+(i-1)*Nx:i*Nx] = [ẋ; ẏ; ẍ; ÿ]
+    for i in 1:Nplayer
+        ẋ = x[nx*i - 1]
+        ẍ = -(c/m)*ẋ + u[nu*i - 1]/m
+        ẏ = x[nx*i]
+        ÿ = -(c/m)*ẏ + u[nu*i]/m
+        xₖ[1+(i-1)*nx:i*nx] = [ẋ; ẏ; ẍ; ÿ]
     end
     return xₖ
 end;

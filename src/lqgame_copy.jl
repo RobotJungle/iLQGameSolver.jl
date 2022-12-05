@@ -66,9 +66,13 @@ function lqGameRH!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps
             S[nui:nuf,nui:nuf] = Rₜ[t,nui:nuf,nui:nuf] + (Bₜ[t,:,nui:nuf]' * V[Nxi:Nxf,:] * Bₜ[t,:,nui:nuf])     #[Sii, .., ..]
             S[nui:nuf,Not(nui:nuf)] = Bₜ[t,:,nui:nuf]' * V[Nxi:Nxf,:] * Bₜ[t,:,Not(nui:nuf)]         #[.., Sij]
             
+            # @show size(Bₜ[t,:,nui:nuf])
+            # @show size(ζ[:,i])
+            # @show size(Yα[nui:nuf])
+            # @show size(rₜ[t,nui:nuf,i] )
             # right hand side of the matrix
-            Y = Bₜ[t,:,:]' * V[Nxi:Nxf,:] * Aₜ[t,:,:]            # right side for Ps       
-            Yα = (Bₜ[t,:,:]' * ζ[:,i]) + rₜ[t,:,i]        # right side for αs Nu by Nx by 1
+            Y[nui:nuf,:] = Bₜ[t,:,nui:nuf]' * V[Nxi:Nxf,:] * Aₜ[t,:,:]            # right side for Ps       
+            Yα[nui:nuf] = (Bₜ[t,:,nui:nuf]' * ζ[:,i]) + rₜ[t,nui:nuf,i]        # right side for αs Nu by Nx by 1
         end
         P[t,:,:] = S\Y     # Nu by Nx
         α[t,:] = S\Yα    # Nu by 1
@@ -99,28 +103,39 @@ function lqGameRH!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps
 end
 
 
-function Rollout_RK4_RH(fun, x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
+function Rollout_RK4_RH(game::GameSolver, dynamics, x̂, û, P, α, α_scale)
     """
     Rollout dynamics with initial state x₀ 
     and control law u = -Px - α
     P is an n x b gain matrix
     α is m x 1
     """
-    
-    m = size(û)[2] #2 controls
+    nx = game.nx
+    nu = game.nu
+    Nplayer = game.Nplayer
+    dt = game.dt
+    H = game.H
+    x₀ = game.x0
+    umin = game.umin
+    umax = game.umax
+
+    Nx = Nplayer*nx
+    Nu = Nplayer*nu
     k_steps = trunc(Int, H/dt) 
-    xₜ = zeros(k_steps, length(x₀)) # 1500 x n
-    uₜ = zeros(k_steps, m)
+
+    k_steps = trunc(Int, H/dt) 
+    xₜ = zeros(k_steps, Nx)
+    uₜ = zeros(k_steps, Nu)
     xₜ[1,:] .= x₀
     for t=1:(k_steps-1)
         # WHAT IS x̂ in xₜ[t,:] - x̂
         #uₜ[t,:] .(= clamp.([0,0] - P[:,:,t]*(xₜ[t,:] - [20,20,0,0]) - α[:,t], umin, umax)
         # @show size(uₜ[t,:]), size(P[t,:,:]), size((xₜ[t,:] - x̂[t,:]))
         uₜ[t,:] .= clamp.(û[t,:] - P[t,:,:]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[t,:], umin, umax)
-        k1 = fun(xₜ[t,:], uₜ[t,:])
-        k2 = fun(xₜ[t,:] + 0.5*dt*k1, uₜ[t,:])
-        k3 = fun(xₜ[t,:] + 0.5*dt*k2, uₜ[t,:])
-        k4 = fun(xₜ[t,:] + dt*k3, uₜ[t,:])
+        k1 = dynamics(game, xₜ[t,:], uₜ[t,:], true)
+        k2 = dynamics(game, xₜ[t,:] + 0.5*dt*k1, uₜ[t,:], true)
+        k3 = dynamics(game, xₜ[t,:] + 0.5*dt*k2, uₜ[t,:], true)
+        k4 = dynamics(game, xₜ[t,:] + dt*k3, uₜ[t,:], true)
         xₜ[t+1,:] .= xₜ[t,:] + (dt/6.0)*(k1 + 2*k2 + 2*k3 + k4)
     end
     

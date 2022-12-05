@@ -63,7 +63,7 @@ function solveILQGameRH(game::GameSolver, dynamics, costf)
     # m1 = nu
     # m2 = nu  
 
-    k_steps = trunc(Int, game.H/dt) 
+    k_steps = trunc(Int, H/dt) 
 
     x̂ = zeros(k_steps, Nx) 
     û = zeros(k_steps, Nu)
@@ -73,7 +73,7 @@ function solveILQGameRH(game::GameSolver, dynamics, costf)
 
     # Rollout players
     ##!!!Pass game struct instead!!!
-    xₜ, uₜ = Rollout_RK4_RH(dynamics, x₀, x̂, û, umin, umax, H, dt, P, α, 0.0)
+    xₜ, uₜ = Rollout_RK4_RH(game, dynamics, x̂, û, P, α, 0.0)
 
     Aₜ = zeros(Float32, (k_steps, Nx, Nx))
     Bₜ = zeros(Float32, (k_steps, Nx, Nu)) # Added
@@ -113,7 +113,7 @@ function solveILQGameRH(game::GameSolver, dynamics, costf)
 
         for t = 1:(k_steps-1)
             
-            Aₜ[t,:,:], Bₜ[t,:,:] = lin_dyn_discrete(dynamics, xₜ[t,:], uₜ[t,:], dt)
+            Aₜ[t,:,:], Bₜ[t,:,:] = lin_dyn_discreteRH(game, dynamics, xₜ[t,:], uₜ[t,:])#lin_dyn_discrete(dynamics, xₜ[t,:], uₜ[t,:], dt)
 
             # Player cost
             for i = 1:Nplayer
@@ -156,7 +156,7 @@ function solveILQGameRH(game::GameSolver, dynamics, costf)
         û = uₜ
 
         # Rollout players with new control law
-        xₜ, uₜ = Rollout_RK4_RH(dynamics, x₀, x̂, û, umin, umax, H, dt, P, α, 0.5)
+        xₜ, uₜ = Rollout_RK4_RH(game, dynamics, x̂, û, P, α, 0.5)
 
     end
 
