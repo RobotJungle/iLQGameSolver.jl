@@ -98,18 +98,18 @@ using InvertedIndices
     xₜ, uₜ = iLQGameSolver.solveILQGame(game, iLQGameSolver.pointMass, iLQGameSolver.costPointMass);
 
     xend = xₜ[end,:]
-
-    @test xend[1] ≈ xgoal[1] atol=1e-3 
-    @test xend[2] ≈ xgoal[2] atol=1e-3 
-    @test xend[3] ≈ xgoal[3] atol=1e-3 
-    @test xend[4] ≈ xgoal[4] atol=1e-3 
+    
+    @test xend[1] ≈ xgoal[1] atol=1e-2 
+    @test xend[2] ≈ xgoal[2] atol=1e-2 
+    @test xend[3] ≈ xgoal[3] atol=1e-2 
+    @test xend[4] ≈ xgoal[4] atol=1e-2 
     @test xend[5] ≈ xgoal[5] atol=1e-2 
-    @test xend[6] ≈ xgoal[6] atol=1e-3 
+    @test xend[6] ≈ xgoal[6] atol=1e-2 
     @test xend[7] ≈ xgoal[7] atol=1e-2 
-    @test xend[8] ≈ xgoal[8] atol=1e-3 
-    @test xend[9] ≈ xgoal[9] atol=1e-3 
+    @test xend[8] ≈ xgoal[8] atol=1e-2 
+    @test xend[9] ≈ xgoal[9] atol=1e-2 
     @test xend[10] ≈ xgoal[10] atol=1e-2 
-    @test xend[11] ≈ xgoal[11] atol=1e-3 
-    @test xend[12] ≈ xgoal[12] atol=1e-2 
+    @test xend[11] ≈ xgoal[11] atol=1e-2 
+    @test xend[12] ≈ xgoal[12] atol=1e-2  
 
 end

@@ -128,9 +128,6 @@ function rolloutRK4(game::GameSolver, dynamics, x̂, û, P, α, α_scale)
     uₜ = zeros(k_steps, Nu)
     xₜ[1,:] .= x₀
     for t=1:(k_steps-1)
-        # WHAT IS x̂ in xₜ[t,:] - x̂
-        #uₜ[t,:] .(= clamp.([0,0] - P[:,:,t]*(xₜ[t,:] - [20,20,0,0]) - α[:,t], umin, umax)
-        # @show size(uₜ[t,:]), size(P[t,:,:]), size((xₜ[t,:] - x̂[t,:]))
         uₜ[t,:] .= clamp.(û[t,:] - P[t,:,:]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[t,:], umin, umax)
         k1 = dynamics(game, xₜ[t,:], uₜ[t,:], true)
         k2 = dynamics(game, xₜ[t,:] + 0.5*dt*k1, uₜ[t,:], true)
@@ -141,40 +138,6 @@ function rolloutRK4(game::GameSolver, dynamics, x̂, û, P, α, α_scale)
     
     return xₜ, uₜ
 end
-
-function rollout_PM_RH(x₀, x̂, û, umin, umax, H, dt, P, α, α_scale)
-
-    m₁ = 1
-    m₂ = 1
-    c = 0.1
-    A1 = sparse([0 0 1 0; 0 0 0 1; 0 0 (-c/m₁) 0; 0 0 0 (-c/m₁)])
-    A2 = sparse([0 0 1 0; 0 0 0 1; 0 0 (-c/m₂) 0; 0 0 0 (-c/m₂)])
-    A = blockdiag(A1, A2)
-    B1 = sparse([0 0; 0 0; (1/m₁) 0; 0 (1/m₁); 0 0; 0 0; 0 0; 0 0])  #Control Jacobian for point mass 1
-    B2 = sparse([0 0; 0 0; 0 0; 0 0; 0 0; 0 0; (1/m₂) 0; 0 (1/m₂)])    #Control Jacobian for point mass 2
-
-    Ad = dt .* A + I    #discretize (zero order hold)
-    B1d = dt .*B1   #discrete (zero order hold)
-    B2d = dt .*B2;   #discrete (zero order hold)
-
-    m = 2 #2 controls
-    k_steps = trunc(Int, H/dt) 
-    xₜ = zeros(k_steps, length(x₀)) # 1500 x n
-    u1ₜ = zeros(k_steps, m) 
-    u2ₜ = zeros(k_steps, m) 
-    xₜ[1,:] .= x₀
-    for t=1:(k_steps-1)
-        u1ₜ[t,:] .= clamp.(û[1][t,:] - P[1][:,:,t]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[1][:,t], umin, umax)
-        u2ₜ[t,:] .= clamp.(û[2][t,:] - P[2][:,:,t]*(xₜ[t,:] - x̂[t,:]) - α_scale*α[2][:,t], umin, umax)
-        ## Hardcode
-        xₜ[t+1,:] .= Ad*xₜ[t,:] + B1d*u1ₜ[t,:] + B2d*u2ₜ[t,:]
-#         u1ₜ[t,:] .= clamp.([0,0] - P[1][:,:,t]*(x̂[t,:] - xgoal) - α_scale*α[1][:,t], umin, umax)
-#         u2ₜ[t,:] .= clamp.([0,0] - P[2][:,:,t]*(x̂[t,:] - xgoal) - α_scale*α[2][:,t], umin, umax)
-#         xₜ[t+1,:] .= xgoal + Ad*(x̂[t,:] - xgoal) + B1d*(u1ₜ[t,:] - [0,0]) + B2d*(u1ₜ[t,:] - [0,0])
-    end
-    return xₜ, u1ₜ, u2ₜ
-end
-
 
 function isConverged(current, last; tol = 1e-4)
     if norm(current - last) > tol

@@ -53,15 +53,9 @@ function solveILQGame(game::GameSolver, dynamics, costf)
     dt = game.dt
     H = game.H
     ρ = game.ρ
-    x₀ = game.x0
-    umin = game.umin
-    umax = game.umax
 
     Nx = Nplayer*nx
     Nu = Nplayer*nu
-
-    # m1 = nu
-    # m2 = nu  
 
     k_steps = trunc(Int, H/dt) 
 

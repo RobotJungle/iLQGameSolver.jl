@@ -1,8 +1,6 @@
 module iLQGameSolver
 using StaticArrays
 
-greet() = print("Hello World!")
-
 include("foo.jl")
 include("quadraticizeCost.jl")
 include("linearizeDynamics.jl")
