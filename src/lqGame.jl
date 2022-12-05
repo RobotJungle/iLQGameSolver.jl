@@ -66,11 +66,8 @@ function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ)
     for t in (k_steps-1):-1:1
         # solving for Ps,αs check equation 19 in document
         for i in 1:Nplayer
-            nui = 1+(i-1)*nu     # Player i's start index
-            nuf = i*nu           # Player i's final index
 
-            Nxi = 1+(i-1)*Nx     # Player i's state start index
-            Nxf = i*Nx           # Player i's state final index
+            Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
 
             # left hand side of the matrix
             S[nui:nuf,nui:nuf] = Rₜ[t,nui:nuf,nui:nuf] + (Bₜ[t,:,nui:nuf]' * V[Nxi:Nxf,:] * Bₜ[t,:,nui:nuf])     #[Sii, .., ..]
@@ -89,10 +86,8 @@ function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ)
         βₜ = - (Bₜ[t,:,:] * α[t,:])
         
         for i in 1:Nplayer
-            nui = 1+(i-1)*nu     # Player i's start index
-            nuf = i*nu           # Player i's final index
-            Nxi = 1+(i-1)*Nx     # Player i's state start index
-            Nxf = i*Nx           # Player i's state final index
+
+            Nxi, Nxf, nui, nuf = getPlayerIdx(game, i)  # get player i's indices
 
             Rij = Diagonal(repeat(Rₜ[t,nui:nuf,:], Nplayer))
 

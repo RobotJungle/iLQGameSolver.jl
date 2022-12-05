@@ -92,10 +92,11 @@ function solveILQGame(game::GameSolver, dynamics, costf)
     x̂ = zeros(k_steps, Nx) 
     û = zeros(k_steps, Nu)
 
+    # Initialize Random gains
     P = rand(k_steps, Nu, Nx)*0.01
     α = rand(k_steps, Nu)*0.01
 
-    # Rollout players
+    # Rollout players, to obtain Initial feasible trajectory
     xₜ, uₜ = rolloutRK4(game, dynamics, x̂, û, P, α, 0.0)
 
     Aₜ = zeros(Float32, (k_steps, Nx, Nx))
@@ -115,22 +116,20 @@ function solveILQGame(game::GameSolver, dynamics, costf)
     
     converged = false
 
-    βreg = 1.0
+    βreg = 1.0 # Regularization parameter
+    αscale = 0.5 # Linesearch parameter
     while !converged
         converged = isConverged(xₜ, x̂, tol = 1e-2)
         total_cost = zeros(Nplayer) # Added
 
         for t = 1:(k_steps-1)
-            
+            # Obtain linearized discrete dynamics
             Aₜ[t,:,:], Bₜ[t,:,:] = linearDiscreteDynamics(game, dynamics, xₜ[t,:], uₜ[t,:])
 
-            # Player cost
+            # Obtain quadraticized cost function 
             for i = 1:Nplayer
-                
-                Nxi = 1+(i-1)*Nx     # Player i's state start index
-                Nxf = i*Nx           # Player i's state final index
-                nui = 1+(i-1)*nu     # Player i's control start index
-                nuf = i*nu           # Player i's control final index
+
+                Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
 
                 costval, Qₜ[t,Nxi:Nxf,:], lₜ[t,:,i], Rₜ[t,nui:nuf,nui:nuf], 
                 rₜ[t,nui:nuf,i], Rₜ[t,nui:nuf,Not(nui:nuf)], rₜ[t,Not(nui:nuf),i] = 
@@ -146,10 +145,8 @@ function solveILQGame(game::GameSolver, dynamics, costf)
         end
 
         for i = 1:Nplayer
-            Nxi = 1+(i-1)*Nx     # Player i's state start index
-            Nxf = i*Nx           # Player i's state final index
-            nui = 1+(i-1)*nu     # Player i's control start index
-            nuf = i*nu           # Player i's control final index
+
+            Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
 
             costval, Qₜ[end,Nxi:Nxf,:], lₜ[end,:,i], Rₜ[end,nui:nuf,nui:nuf], 
             rₜ[end,nui:nuf,i], Rₜ[end,nui:nuf,Not(nui:nuf)], rₜ[end,Not(nui:nuf),i] = 
@@ -165,7 +162,7 @@ function solveILQGame(game::GameSolver, dynamics, costf)
         û = uₜ
 
         # Rollout players with new control law
-        xₜ, uₜ = rolloutRK4(game, dynamics, x̂, û, P, α, 0.5)
+        xₜ, uₜ = rolloutRK4(game, dynamics, x̂, û, P, α, αscale)
 
     end
 
