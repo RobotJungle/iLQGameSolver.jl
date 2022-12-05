@@ -3,9 +3,26 @@ using SparseArrays
 using StaticArrays
 using InvertedIndices
 
-
 """
-    GameSolver
+    GameSolver 
+
+Struct for holding the game parameters. 
+
+    nx: Number of states for each player
+    nu: Number of control inputs for each player 
+    Nplayer: Total number of players 
+    x0: Intial state vector 
+    xf: Final state goal vector
+    umin: Minimum control input vector
+    umax: Maximum control input vector
+    uf: Final control input goal vector
+    Q: State error cost matrix
+    R: Control input matrix
+    Qn: Terminal state error cost matrix
+    dt: Timestep in seconds
+    H: Time horizon in seconds
+    dmax: Minimum distance between all agents in meters
+    ρ: Penalty factor for violating distance constraint
 """
 struct GameSolver
     nx::Int64
@@ -44,7 +61,20 @@ function GameSetup(nx::Int64, nu::Int64, Nplayer::Int64, Q::SparseMatrixCSC{Floa
     GameSolver(nx, nu, Nplayer, x0, xf, umin, umax, uf, Q, R, Qn, dt, H, dmax, ρ)
 end
 
+"""
+    solveILQGame(game, dynamics, costf)
 
+Solves the LQ game iteratively.
+
+Inputs:
+    game: GameSolver struct (see solveilqGame.jl)
+    dynamics: Dynamics function for entire game
+    costf: Cost function for the game
+
+Outputs:
+    xₜ: States at each timestep for the converged solution (k_steps, Nx)
+    uₜ: Control inputs at each timestep for the converged solution (k_steps, Nu)
+"""
 
 function solveILQGame(game::GameSolver, dynamics, costf)
     nx = game.nx
@@ -66,33 +96,18 @@ function solveILQGame(game::GameSolver, dynamics, costf)
     α = rand(k_steps, Nu)*0.01
 
     # Rollout players
-    ##!!!Pass game struct instead!!!
     xₜ, uₜ = rolloutRK4(game, dynamics, x̂, û, P, α, 0.0)
 
     Aₜ = zeros(Float32, (k_steps, Nx, Nx))
     Bₜ = zeros(Float32, (k_steps, Nx, Nu)) # Added
-    # B1ₜ = zeros(Float32, (Nx, m1, k_steps))
-    # B2ₜ = zeros(Float32, (Nx, m2, k_steps))
 
     Qₜ = zeros(Float32, (k_steps, Nx*Nplayer, Nx))
-    # Q1ₜ = zeros(Float32, (Nx, Nx, k_steps))
-    # Q2ₜ = zeros(Float32, (Nx, Nx, k_steps))
 
     lₜ = zeros(Float32, (k_steps, Nx, Nplayer))
-    # l1ₜ = zeros(Float32, (Nx, k_steps))
-    # l2ₜ = zeros(Float32, (Nx, k_steps))
 
     Rₜ = zeros(Float32, (k_steps, Nu, Nu)) 
-    # R11ₜ = zeros(Float32, (m1, m1, k_steps))
-    # R12ₜ = zeros(Float32, (m1, m2, k_steps))
-    # R22ₜ = zeros(Float32, (m2, m2, k_steps))
-    # R21ₜ = zeros(Float32, (m2, m1, k_steps))
 
     rₜ = zeros(Float32, (k_steps, Nu, Nplayer))
-    # r11ₜ = zeros(Float32, (m1, k_steps))
-    # r12ₜ = zeros(Float32, (m1, k_steps))
-    # r22ₜ = zeros(Float32, (m2, k_steps))
-    # r21ₜ = zeros(Float32, (m2, k_steps))
 
     Q = game.Q
     R = game.R
@@ -144,7 +159,7 @@ function solveILQGame(game::GameSolver, dynamics, costf)
             total_cost[i] += costval
         end
 
-        P, α = lqGame!(game, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps)
+        P, α = lqGame!(game, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ)
 
         x̂ = xₜ
         û = uₜ

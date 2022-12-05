@@ -1,44 +1,55 @@
 using LinearAlgebra
 using InvertedIndices
 
+"""
+    lgame!(game, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ)
 
-function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps)
-    """
-    n = total number of states for each players
-    m = total number of inputs for each player
-    Nx = total number of states for all players (Nplayers*n)
-    Nu = total number of inputs for all players (Nplayers*m)
-    k_steps = number of knot points in time horizon
-    u is mx1
-    Input
-    Aₜ is an k_steps by Nx by Nx matrix (k_steps, Nx, Nx)
-    Bₜ is an k_steps by Nx by Nu matrix (k_steps, Nx, Nu)
-    Qₜ is an k_steps by Nx by Nx matrix (k_steps, Nx, Nx)
-    lₜ is an k_steps by Nx by 1 matrix (k_steps, Nx, )
-    Rₜ is an k_steps by Nplayers by Nplayers matrix (2x2)
-    i.e. Rₜ[1]:
+Solve the LQ game as described by Basar and Olsder in chapter 6 of
+'Dynamic Noncooperative Game Theory'. 
+
+Inputs:
+    game: GameSolver struct (see solveilqGame.jl)
+    Aₜ: Linearized discrete state matrix (k_steps, Nx, Nx)
+    Bₜ: Linearized discrete control input matrix (k_steps, Nx, Nu)
+    Qₜ: State cost matrices, stacked vertically (k_steps, Nx*Nplayer, Nx)
+    i.e. Qₜ[1,:,:] (at t = 1):
     [
-        [R11] [R12] [R13] ... [R1 Nplayers]
-        [R21] [R22] [R23] ... [R2 Nplayers]
-          .     .     .
-          .     .          .
-          .     .               .
+        [Q1]
+        [Q2] 
+          .   
+          .     
+          .     
+        [QNplayer] 
+    ] 
+    lₜ: State cost vectors, stacked vertically (k_steps, Nx, Nplayer)
+    Rₜ: Control input cost matrices (k_steps, Nu, Nu)
+    i.e. Rₜ[1,:,:] (at t = 1):
+    [
+        [R11] [R12] [R13] ... [R1 Nplayer]
+        [R21] [R22] [R23] ... [R2 Nplayer]
+            .     .     .
+            .     .          .
+            .     .               .
         [R Nplayers 1] [R Nplayers 2] [R Nplayers 3] ... [R Nplayers Nplayers]
     ] where Rij are matrices
-    rₜ is an k_steps by Nplayers by Nplayers (k_steps, Nplayers, Nplayers)
-    Similar to Rₜ but rij are vectors 
-    Output
-    P₁ is an mxn matrix (2x8)
-    P₂ is an mxn matrix (2x8)
-    α₁ (1x2)
-    ζ₁ is an nx1 matrix (8x1)
-    """
+    rₜ: Control input cost vectors (k_steps, Nu, Nplayers)
+
+Outputs:
+    u⋆ = -Px - α
+    P: Optimal control gain matrix (k_steps, Nu, Nx)
+    α: Optimal control offset vector (k_steps, Nu)
+"""
+
+
+function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ)
+    
     nx = game.nx
     nu = game.nu
     Nplayer = game.Nplayer
     Nx = nx * Nplayer
     Nu = nu * Nplayer
-    #Nx, Nu = size(Bₜ)
+
+    k_steps = Int(game.H/game.dt)
 
     V = copy(Qₜ[end,:,:]) # At last time step
 
@@ -48,7 +59,6 @@ function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps)
     
     α = zeros(Float32, (k_steps, Nu))
 
-    #S = deepcopy(Rₜ[1]) #!Very Bad
     S = zeros(Nu, Nu)
     Y = zeros(Nu, Nx)
     Yα = zeros(Nu)
@@ -66,11 +76,6 @@ function lqGame!(game::GameSolver, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps)
             S[nui:nuf,nui:nuf] = Rₜ[t,nui:nuf,nui:nuf] + (Bₜ[t,:,nui:nuf]' * V[Nxi:Nxf,:] * Bₜ[t,:,nui:nuf])     #[Sii, .., ..]
             S[nui:nuf,Not(nui:nuf)] = Bₜ[t,:,nui:nuf]' * V[Nxi:Nxf,:] * Bₜ[t,:,Not(nui:nuf)]         #[.., Sij]
             
-            # @show size(Bₜ[t,:,nui:nuf])
-            # @show size(ζ[:,i])
-            # @show size(Yα[nui:nuf])
-            # @show size(rₜ[t,nui:nuf,i] )
-            # right hand side of the matrix
             Y[nui:nuf,:] = Bₜ[t,:,nui:nuf]' * V[Nxi:Nxf,:] * Aₜ[t,:,:]            # right side for Ps       
             Yα[nui:nuf] = (Bₜ[t,:,nui:nuf]' * ζ[:,i]) + rₜ[t,nui:nuf,i]        # right side for αs Nu by Nx by 1
         end
@@ -135,7 +140,6 @@ function rolloutRK4(game::GameSolver, dynamics, x̂, û, P, α, α_scale)
         k4 = dynamics(game, xₜ[t,:] + dt*k3, uₜ[t,:], true)
         xₜ[t+1,:] .= xₜ[t,:] + (dt/6.0)*(k1 + 2*k2 + 2*k3 + k4)
     end
-    
     return xₜ, uₜ
 end
 

@@ -3,22 +3,11 @@ using SparseArrays
 using StaticArrays
 
 """
-    MultiAgentDynamics
-"""
-struct MultiAgentDynamics
-    nx::Int64           # Number of states for each player
-    nu::Int64           # Number of inputs for each player
-    Nplayers::Int64     # Total number of players
-    dt::Float32         # Timestep [s]
-end
-
-"""
 n Agent dynamics
 2D Point Mass:
 State x: [x, y, ẋ, ẏ]
 Input u: [Fx, Fy]
 """
-
 function pointMass(game::GameSolver, x, u, B)
     nx = game.nx
     nu = game.nu
@@ -45,29 +34,29 @@ function pointMass(game::GameSolver, x, u, B)
     return xₖ
 end;
 
-"""
-n Agent
-Differential Drive:
-State x: [x, y, θ, v]
-Input u: [a, ω]
-"""
-function diffDrive4D(dynamics::MultiAgentDynamics , x::Vector{Float64}, u::Vector{Float64})
-    Nx = dynamics.nx   
-    Nu = dynamics.nu
-    Nplayers = dynamics.Nplayers
-    @assert Nx*Nplayers == length(x) "State input doesn't match size of definition"
-    @assert Nu*Nplayers == length(u) "Control input doesn't match size of definition"
-    ẋ = zeros(Nplayers)     # Velocity in x [m/s]
-    ẏ = zeros(Nplayers)     # Acceleration in x [m^2/s]
-    θ̇ = zeros(Nplayers)     # Velocity in y [m/s]
-    v̇ = zeros(Nplayers)     # Acceleration in y [m^2/s]
-    u = zeros(Nplayers*Nu)  # Contol Inputs [N]
-    for i in 1:Nplayers
-        ẋ[i] = cos(x[Nx*i - 1])*x[Nx*i] 
-        ẏ[i] = sin(x[Nx*i - 1])*x[Nx*i] 
-        θ̇[i] = u[Nu*i]
-        v̇[i] = u[Nu*i -1]
-    end
+# """
+# n Agent
+# Differential Drive:
+# State x: [x, y, θ, v]
+# Input u: [a, ω]
+# """
+# function diffDrive4D(dynamics::MultiAgentDynamics , x::Vector{Float64}, u::Vector{Float64})
+#     Nx = dynamics.nx   
+#     Nu = dynamics.nu
+#     Nplayers = dynamics.Nplayers
+#     @assert Nx*Nplayers == length(x) "State input doesn't match size of definition"
+#     @assert Nu*Nplayers == length(u) "Control input doesn't match size of definition"
+#     ẋ = zeros(Nplayers)     # Velocity in x [m/s]
+#     ẏ = zeros(Nplayers)     # Acceleration in x [m^2/s]
+#     θ̇ = zeros(Nplayers)     # Velocity in y [m/s]
+#     v̇ = zeros(Nplayers)     # Acceleration in y [m^2/s]
+#     u = zeros(Nplayers*Nu)  # Contol Inputs [N]
+#     for i in 1:Nplayers
+#         ẋ[i] = cos(x[Nx*i - 1])*x[Nx*i] 
+#         ẏ[i] = sin(x[Nx*i - 1])*x[Nx*i] 
+#         θ̇[i] = u[Nu*i]
+#         v̇[i] = u[Nu*i -1]
+#     end
 
-    return [ẋ; ẏ; θ̇; v̇]
-end;
+#     return [ẋ; ẏ; θ̇; v̇]
+# end;

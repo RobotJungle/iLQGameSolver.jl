@@ -88,7 +88,7 @@ include("2PlayerFunctions.jl")
     B2ₜ = Bₜ[:,:,nu+1:end]
     # lₜ = zeros(Float32, (k_steps, Nx, Nplayer)) #rand
     # rₜ = zeros(Float32, (k_steps, Nu, Nplayer)) #rand
-    P, α = iLQGameSolver.lqGame!(game, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ, k_steps)
+    P, α = iLQGameSolver.lqGame!(game, Aₜ, Bₜ, Qₜ, lₜ, Rₜ, rₜ)
 
     P₁, P₂, α₁, α₂ = lqGame2P!(Aₜ, B1ₜ, B2ₜ, Q1ₜ, Q2ₜ, l1ₜ, l2ₜ, R11ₜ, R12ₜ, R21ₜ, R22ₜ, r11ₜ, r22ₜ, r12ₜ, r21ₜ, k_steps)
 

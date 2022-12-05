@@ -1,6 +1,37 @@
 using LinearAlgebra
 using ForwardDiff
 
+"""
+    costPointMass(game, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
+
+A custom function for an Nplayer point mass interaction. The cost
+is composed of state tracking error, control input tracking error, 
+terminal state error, and collision avoidance. 
+
+Collision avoidance: If a player is less than a distance game.dmax 
+from another player, then they both incur a penalty. That penalty is 
+quadratic as it is proportional to how close together they are. 
+If a player is not violating the constraint, then the penalty is zero.
+
+Inputs:
+    game: GameSolver struct (see solveilqGame.jl)
+    i: Player number 
+    Qi: Player i's state tracking cost matrix (Nx, Nx)
+    Rii: Player i's control input cost matrix wrt to it's control input 
+        (nu, nu)
+    Rij: Player i's control input cost matrix wrt to all other players' 
+        control inputs ((Nplayer-1)*nu, (Nplayer-1*nu))
+    Qni: Player i's terminal state cost matrix (Nx, Nx)
+    x: State vector (Nx)
+    ui: Player i's control inputs vector (nu)
+    uj: All other players' control inputs vector ((Nplayer-1)*nu)
+    B: Terminal state? (Bool)
+
+Outputs:
+    Cost: Player i's scalar cost
+"""
+
+
 function costPointMass(game, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
 
     # No need to pass Qi, Rii, Rij, Qni into so many functions.
@@ -37,6 +68,46 @@ function costPointMass(game, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
 end
 
 
+"""
+    quadraticizeCost(game, cost_fun, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
+
+A custom function for an Nplayer point mass interaction. The cost
+is composed of state tracking error, control input tracking error, 
+terminal state error, and collision avoidance. 
+
+Collision avoidance: If a player is less than a distance game.dmax 
+from another player, then they both incur a penalty. That penalty is 
+quadratic as it is proportional to how close together they are. 
+If a player is not violating the constraint, then the penalty is zero.
+
+Inputs:
+    game: GameSolver struct (see solveilqGame.jl)
+    cost_fun: Cost function for the game 
+    i: Player number 
+    Qi: Player i's state tracking cost matrix (Nx, Nx)
+    Rii: Player i's control input cost matrix wrt to it's control input 
+        (nu, nu)
+    Rij: Player i's control input cost matrix wrt to all other players' 
+        control inputs ((Nplayer-1)*nu, (Nplayer-1*nu))
+    Qni: Player i's terminal state cost matrix (Nx, Nx)
+    x: State vector (Nx)
+    ui: Player i's control inputs vector (nu)
+    uj: All other players' control inputs vector ((Nplayer-1)*nu)
+    B: Terminal state? (Bool)
+
+Outputs:
+    cost: Player i's scalar cost
+    Q̂i: Player i's state tracking cost matrix (Nx, Nx)
+    l̂i: Player i's state cost vector (Nx, Nplayer) 
+    R̂ii: Player i's control input cost matrix wrt to it's control input 
+        (nu, nu)
+    r̂ii: Player i's control input cost vector wrt to it's control input 
+        (nu)
+    R̂ij:Player i's control input cost matrix wrt to all other players' 
+        control inputs ((Nplayer-1)*nu, (Nplayer-1*nu))
+    r̂ij: Player i's control input cost vector wrt to all other players' 
+    control inputs ((Nplayer-1)*nu)
+"""
 function quadraticizeCost(game, cost_fun, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
     """
     2nd order Taylor expansion of cost at t
@@ -53,7 +124,6 @@ function quadraticizeCost(game, cost_fun, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
 
     dx = x - game.xf
     if B 
-        # Is this correct?
         dui = zeros(size(ui))
         duj = zeros(size(uj))
     else
@@ -65,8 +135,7 @@ function quadraticizeCost(game, cost_fun, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
         duj = uj - game.uf[Not(nui:nuf)]
     end
     cost = 0.5 * dx' * (Q̂i*dx + 2*l̂i) + 0.5 * dui' * (R̂ii*dui + 2*r̂ii) + 0.5 * duj' * (R̂ijH*duj + 2*r̂ij)
-    # @show Q̂i
-    # @show size(Q̂i), size(l̂i), size(R̂ii), size(r̂ii), size(R̂ij), size(r̂ij)
+
     R̂ij = zeros(nu, (Nplayer-1)*nu)
     for i =1:Nplayer-1
         R̂ij .+= R̂ijH[1+(i-1)*nu:i*nu,:] 
