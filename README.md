@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/itsahmedkhalil/iLQGameSolver.jl/branch/main/graph/badge.svg?token=ZCZYZGCH2T)](https://codecov.io/gh/itsahmedkhalil/iLQGameSolver.jl)
 # Iterative Linear-Quadratic Game Solver for Multi-Agent Nonlinear Robotic Interactions
 
-This repo is inspired by [ilqgames](https://arxiv.org/abs/1909.04694), efficient iterative linear-quadratic approxmiations for nonlinear multi-player general-sum differential games. 
+This repo is inspired by [ilqgames](https://arxiv.org/abs/1909.04694), an efficient iterative linear-quadratic approximations for nonlinear multi-player general-sum differential games. 
 
 It is still a work in progress. An example of a three point masses navigating at an intersection can be shown in the following GIF. 
 
@@ -25,20 +25,17 @@ A folder called iLQGameSolver should be created and it should contain the repo. 
 
 ## Todo list:
 
-### Todo list:
+### Important:
 
-
-Important:
-
-- Generalize for multiple agents:
-    - Pass the dynamics function manually. Looping over each agent is inefficient. 
+- ~~Generalize for multiple agents:~~
+    - ~~Pass the dynamics function manually. Looping over each agent is inefficient.~~ 
 
 - Add documentation and write report
 
 - Receding horizon for online trajectory optimization
 
 - Make a better GUI for the results
-  - Graphical represenation of the robots pose and shape in plots
+  - Graphical representation of the robots pose and shape in plots
   - Add TurtleBot to MeshCat or on ROS to visualize results
 
 -  ~~Put code in .jl file instead of .ipynb~~

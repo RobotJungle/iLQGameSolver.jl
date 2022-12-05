@@ -1,6 +1,8 @@
 using LinearAlgebra
 using SparseArrays
 
+include("2PlayerFunctions.jl")
+
 @testset "Linearization" begin
     # Setup the problem
     dt = 0.1                    # Step size [s]
@@ -25,8 +27,8 @@ using SparseArrays
     x = zeros(Nx)
     u = zeros(Nu)
 
-    dynamics = iLQGameSolver.point_mass
-    A, B = iLQGameSolver.lin_dyn_discreteRH(game, dynamics,x,u)
+    dynamics = iLQGameSolver.pointMass
+    A, B = iLQGameSolver.linearDiscreteDynamics(game, dynamics,x,u)
 
     c = 0.1
     m₁ = 1.0
@@ -37,8 +39,8 @@ using SparseArrays
     B1 = sparse([0 0; 0 0; (1/m₁) 0; 0 (1/m₁); 0 0; 0 0; 0 0; 0 0])  #Control Jacobian for point mass 1
     B2 = sparse([0 0; 0 0; 0 0; 0 0; 0 0; 0 0; (1/m₂) 0; 0 (1/m₂)])    #Control Jacobian for point mass 2
     BTest = cat(B1,B2,dims=2)
-    Ad = game.dt .* ATest + I    #discretize (zero order hold)
-    Bd = game.dt .*BTest;   #discrete (zero order hold)
+    Ad = game.dt .* ATest + I       #discretize (zero order hold)
+    Bd = game.dt .*BTest;           #discrete (zero order hold)
 
     @test sparse(A) == Ad
     @test sparse(B) == Bd

@@ -2,6 +2,8 @@ using LinearAlgebra
 using SparseArrays
 using InvertedIndices
 
+include("2PlayerFunctions.jl")
+
 @testset "Cost" begin
     # Setup the problem
     dt = 0.1                    # Step size [s]
@@ -90,14 +92,14 @@ using InvertedIndices
         nui = 1+(i-1)*nu     # Player i's control start index
         nuf = i*nu           # Player i's control final index
 
-        costRH[i] = iLQGameSolver.costPointMassRH(game, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], 
+        costRH[i] = iLQGameSolver.costPointMass(game, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], 
         R[nui:nuf,Not(nui:nuf)], Qn[Nxi:Nxf,:], x, u[nui:nuf], u[Not(nui:nuf)], false)
 
-        costRHFinal[i] = iLQGameSolver.costPointMassRH(game, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], 
+        costRHFinal[i] = iLQGameSolver.costPointMass(game, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], 
         R[nui:nuf,Not(nui:nuf)], Qn[Nxi:Nxf,:], x, u[nui:nuf], u[Not(nui:nuf)], true)
 
         costQuadGen[i], Qₜ[Nxi:Nxf,:], lₜ[:,i], Rₜ[nui:nuf,nui:nuf], rₜ[nui:nuf,i], Rₜ[nui:nuf,Not(nui:nuf)], rₜ[Not(nui:nuf),i] = 
-        iLQGameSolver.quadratic_costRH(game, iLQGameSolver.costPointMassRH, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
+        iLQGameSolver.quadraticizeCost(game, iLQGameSolver.costPointMass, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
         Qn[Nxi:Nxf,:], x, u[nui:nuf], u[Not(nui:nuf)], false)
     end
 
@@ -108,18 +110,14 @@ using InvertedIndices
     costQuadFinal = zeros(Nplayer)
 
     # Player 1
-    cost[1] = iLQGameSolver.costPointMass(Q1, R11, R12, Qn1, x, u1, u2, xgoal, u1goal, u2goal, game.dmax, game.ρ, false)
-
-    costFinal[1] = iLQGameSolver.costPointMass(Q1, R11, R12, Qn1, x, u1, u2, xgoal, u1goal, u2goal, game.dmax, game.ρ, true)
-
-    costQuad[1], Q̂1, l̂1, R̂11, r̂11, R̂12, r̂12 = iLQGameSolver.quadratic_cost(iLQGameSolver.costPointMass, Q1, R11, R12, Qn1, x, u1, u2, xgoal, u1goal, u2goal, game.dmax, game.ρ, false)
+    cost[1] = costPointMass2P(Q1, R11, R12, Qn1, x, u1, u2, xgoal, u1goal, u2goal, game.dmax, game.ρ, false)
+    costFinal[1] = costPointMass2P(Q1, R11, R12, Qn1, x, u1, u2, xgoal, u1goal, u2goal, game.dmax, game.ρ, true)
+    costQuad[1], Q̂1, l̂1, R̂11, r̂11, R̂12, r̂12 = quadraticizeCost2P(costPointMass2P, Q1, R11, R12, Qn1, x, u1, u2, xgoal, u1goal, u2goal, game.dmax, game.ρ, false)
 
     # Player 2
-    cost[2] = iLQGameSolver.costPointMass(Q2, R22, R21, Qn2, x, u2, u1, xgoal, u2goal, u1goal, game.dmax, game.ρ, false)
-
-    costFinal[2] = iLQGameSolver.costPointMass(Q2, R22, R21, Qn2, x, u2, u1, xgoal, u2goal, u1goal, game.dmax, game.ρ, true)
-
-    costQuad[2], Q̂2, l̂2, R̂22, r̂22, R̂21, r̂21 = iLQGameSolver.quadratic_cost(iLQGameSolver.costPointMass, Q2, R22, R21, Qn2, x, u2, u1, xgoal, u2goal, u1goal, game.dmax, game.ρ, false)
+    cost[2] = costPointMass2P(Q2, R22, R21, Qn2, x, u2, u1, xgoal, u2goal, u1goal, game.dmax, game.ρ, false)
+    costFinal[2] = costPointMass2P(Q2, R22, R21, Qn2, x, u2, u1, xgoal, u2goal, u1goal, game.dmax, game.ρ, true)
+    costQuad[2], Q̂2, l̂2, R̂22, r̂22, R̂21, r̂21 = quadraticizeCost2P(costPointMass2P, Q2, R22, R21, Qn2, x, u2, u1, xgoal, u2goal, u1goal, game.dmax, game.ρ, false)
 
     @test costRH == cost
     @test costRHFinal == costFinal
