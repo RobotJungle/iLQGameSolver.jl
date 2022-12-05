@@ -2,9 +2,9 @@
 
 This repo is inspired by [ilqgames](https://arxiv.org/abs/1909.04694), efficient iterative linear-quadratic approxmiations for nonlinear multi-player general-sum differential games. 
 
-It is still a work in progress. An example of a two differential drive mobile robots navigating at an intersection can be shown in the following GIF. 
+It is still a work in progress. An example of a three point masses navigating at an intersection can be shown in the following GIF. 
 
-![Alt Text](examples/assets/diff_drive.gif)
+![Alt Text](examples/assets/three_agent.gif)
 
 ## How to install for development
 
