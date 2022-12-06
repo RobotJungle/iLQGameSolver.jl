@@ -21,7 +21,6 @@ include("2PlayerFunctions.jl")
     Nu = nu * Nplayer
     Nx = nx * Nplayer
 
-
     Q1 = sparse(zeros(Nx,Nx))     # State cost for agent 1
     Q1[1:nx,1:nx] .= 3.0*I(nx)
     Qn1 = Q1                    # Terminal cost for agent 1
