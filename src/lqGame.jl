@@ -109,12 +109,12 @@ end
 
 
 function rolloutRK4(game::GameSolver, dynamics, x̂, û, P, α, α_scale)
-    """
+"""
     Rollout dynamics with initial state x₀ 
     and control law u = -Px - α
     P is an n x b gain matrix
     α is m x 1
-    """
+"""
     nx = game.nx
     nu = game.nu
     Nplayer = game.Nplayer
