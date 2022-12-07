@@ -1,3 +1,4 @@
+using LinearAlgebra
 """
 Get Player i's start and final index
 """

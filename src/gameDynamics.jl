@@ -32,7 +32,7 @@ function pointMass(game, x, u, B)
         xₖ[1+(i-1)*nx:i*nx] = [ẋ; ẏ; ẍ; ÿ]
     end
     return xₖ
-end;
+end
 
 # """
 # n Agent

@@ -30,8 +30,6 @@ Inputs:
 Outputs:
     Cost: Player i's scalar cost
 """
-
-
 function costPointMass(game, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
 
     # No need to pass Qi, Rii, Rij, Qni into so many functions.

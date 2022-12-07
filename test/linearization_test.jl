@@ -6,9 +6,10 @@ include("2PlayerFunctions.jl")
 @testset "Linearization" begin
     # Setup the problem
     dt = 0.1                    # Step size [s]
-    H = 10.0                    # Horizon [s]
-    k_steps = Int(H/dt)         # Number of steps (knot points)
+    tf = 10.0                    # Horizon [s]
+    N = trunc(Int, tf/dt)         # Number of steps (knot points)
 
+    NHor = N
     # Define cost matrices 
     nx = 4 
     nu = 2
@@ -22,7 +23,7 @@ include("2PlayerFunctions.jl")
     Q = sparse(zeros(Float32, Nx*Nplayer, Nx))
     Qn = sparse(zeros(Float32, Nx*Nplayer, Nx))
     R = sparse(zeros(Float32, Nu, Nu))
-    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, H, dmax, ρ);
+    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ)
 
     x = zeros(Nx)
     u = zeros(Nu)

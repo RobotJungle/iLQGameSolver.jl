@@ -50,17 +50,13 @@ Outputs:
     xₜ: States at each timestep for the converged solution (k_steps, Nx)
     uₜ: Control inputs at each timestep for the converged solution (k_steps, Nu)
 """
-
-function solveILQGame(game, solver, dynamics, costf, kstart, x0, terminal)
+function solveILQGame(game, solver, dynamics, costf, x0, terminal)
     Nplayer = game.Nplayer
     NHor = game.NHor
     Q = game.Q
     R = game.R
     Qn = game.Qn
-    tf = game.tf
-    dt = game.dt
-    N = trunc(Int, tf/dt)
-
+    
     Aₜ = solver.Aₜ
     Bₜ = solver.Bₜ
     Qₜ = solver.Qₜ
@@ -74,7 +70,7 @@ function solveILQGame(game, solver, dynamics, costf, kstart, x0, terminal)
     converged = false
 
     βreg = 1.0 # Regularization parameter
-    αscale = 1.0 # Linesearch parameter
+    αscale = 0.5 # Linesearch parameter
     while !converged
         converged = isConverged(xₜ, solver.x̂, tol = 1e-2)
         total_cost = zeros(Nplayer) # Added
@@ -111,19 +107,6 @@ function solveILQGame(game, solver, dynamics, costf, kstart, x0, terminal)
                 
                 total_cost[i] += costval
             end
-
-            # indx = kstart+NHor
-            # for i = 1:Nplayer
-
-            #     Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
-    
-            #     costval, Qₜ[indx,Nxi:Nxf,:], lₜ[indx,:,i], Rₜ[indx,nui:nuf,nui:nuf], 
-            #     rₜ[indx,nui:nuf,i], Rₜ[indx,nui:nuf,Not(nui:nuf)], rₜ[indx,Not(nui:nuf),i] = 
-            #     quadraticizeCost(game, costf, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
-            #     Qn[Nxi:Nxf,:], xₜ[indx,:], uₜ[indx,nui:nuf], uₜ[indx, Not(nui:nuf)], true)
-                
-            #     total_cost[i] += costval
-            # end
         end
 
         lqGame!(game, solver)
@@ -133,9 +116,7 @@ function solveILQGame(game, solver, dynamics, costf, kstart, x0, terminal)
 
         # Rollout players with new control law
         xₜ, uₜ = rolloutRK4(game, solver, dynamics, x0, αscale)
-        # xₜ[1,:,:] = xₜ[kstart,:,:]
-        # uₜ[1,:,:] = uₜ[kstart,:,:]
     end
 
-    return xₜ, uₜ#xₜ[2,:,:], uₜ[1,:,:]
+    return xₜ, uₜ
 end
