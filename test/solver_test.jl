@@ -5,7 +5,7 @@ using InvertedIndices
 
 @testset "solveilqGame Test" begin
    
-        # Setup the problem
+       # Setup the problem
 
         dt = 0.1                    # Step size [s]
         tf = 10.0                    # Horizon [s]
@@ -42,7 +42,7 @@ using InvertedIndices
         R33 = sparse(1.0*I(2))     # Control cost for player 2 associated with player 1's controls
 
         dmax = 2.0                  # Distance that both agents should keep between each other [m]
-        ρ = 500.0                   # Penalty factor for violating the distance constraint
+        ρ = 5000.0                   # Penalty factor for violating the distance constraint
 
         # Q's are stacked vertically
         Q = sparse(zeros(Float32, Nx*Nplayer, Nx))
@@ -61,10 +61,14 @@ using InvertedIndices
         R .= [R11 R12 R13; R21 R22 R23; R31 R32 R33]
 
         NHor = N
+        tol = 1e-2
 
-        game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ)
+        game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ, tol)
 
         solver = iLQGameSolver.iLQSetup(Nx, Nu, Nplayer, NHor)
+
+        solver.P = ones(NHor, Nu, Nx)*0.03
+        solver.α = ones(NHor, Nu)*0.03
 
         # Initial and final states
         # x₁, y₁, ̇x₁, ̇y₁, x₂, y₂, ̇x₂, ̇y₂       
@@ -96,10 +100,9 @@ using InvertedIndices
         game.xf .= xgoal
         game.umin .= umin
         game.umax .= umax
-        game.uf .= ugoal
-
-        X,U = iLQGameSolver.solveILQGame(game, solver, iLQGameSolver.pointMass, iLQGameSolver.costPointMass, x₀, true)
-
+        game.uf .= ugoal;
+        
+        X,U = iLQGameSolver.solveILQGame(game, solver, iLQGameSolver.pointMass, iLQGameSolver.costPointMass, x₀, true);
 
         xend = X[end,:,:]
 
@@ -115,5 +118,4 @@ using InvertedIndices
         @test xend[10] ≈ xgoal[10] atol=1e-2 
         @test xend[11] ≈ xgoal[11] atol=1e-2 
         @test xend[12] ≈ xgoal[12] atol=1e-2 
-        
 end

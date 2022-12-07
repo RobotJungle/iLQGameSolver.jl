@@ -50,7 +50,9 @@ include("2PlayerFunctions.jl")
     Rₜ = zeros(Float32, (Nu, Nu)) 
     rₜ = zeros(Float32, (Nu, Nplayer))
 
-    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ)
+    tol = 1e-4
+
+    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ, tol)
     solver = iLQGameSolver.iLQSetup(Nx, Nu, Nplayer, NHor)
     # Initial state 
     x₀ = [5.0; 0.0; 0.0; 0.0; 

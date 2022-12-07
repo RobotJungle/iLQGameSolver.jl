@@ -39,6 +39,7 @@ struct GameStruct
     NHor::Int64
     dmax::Float64
     ρ::Float64
+    tol::Float64
 end
 
 """
@@ -48,7 +49,7 @@ Generates a `LQGameSolver` that uses solveiLQGames to solve the problem.
 """
 function GameSetup(nx::Int64, nu::Int64, Nplayer::Int64, Q::SparseMatrixCSC{Float32,Int}, 
                     R::SparseMatrixCSC{Float32,Int}, Qn::SparseMatrixCSC{Float32,Int}, 
-                    dt::Float64, tf::Float64, NHor::Int64, dmax::Float64, ρ::Float64)
+                    dt::Float64, tf::Float64, NHor::Int64, dmax::Float64, ρ::Float64, tol::Float64)
     Nx = Nplayer*nx    
     Nu = Nplayer*nu
     x0 = zeros(Nx)
@@ -56,5 +57,5 @@ function GameSetup(nx::Int64, nu::Int64, Nplayer::Int64, Q::SparseMatrixCSC{Floa
     umin = zeros(Nu)
     umax = zeros(Nu)
     uf = zeros(Nu)
-    GameStruct(nx, nu, Nplayer, x0, xf, umin, umax, uf, Q, R, Qn, dt, tf, NHor, dmax, ρ)
+    GameStruct(nx, nu, Nplayer, x0, xf, umin, umax, uf, Q, R, Qn, dt, tf, NHor, dmax, ρ, tol)
 end

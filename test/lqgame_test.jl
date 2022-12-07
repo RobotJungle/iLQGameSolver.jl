@@ -56,7 +56,8 @@ include("2PlayerFunctions.jl")
     R = sparse(zeros(Float32, Nu, Nu))
     R .= [R11 R12; R21 R22]
 
-    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ)
+    tol = 1e-4
+    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ, tol)
     solver = iLQGameSolver.iLQSetup(Nx, Nu, Nplayer, NHor)
 
     x = zeros(Nx)

@@ -10,7 +10,6 @@ using InvertedIndices
     dt = 0.1                    # Step size [s]
     tf = 10.0                    # Horizon [s]
     N = Int(tf/dt)         # Number of steps (knot points)
-    println(N)
 
     # Define cost matrices 
     nx = 4 
@@ -62,8 +61,9 @@ using InvertedIndices
     R .= [R11 R12 R13; R21 R22 R23; R31 R32 R33]
 
     NHor = 20
+    tol = 1e-4
 
-    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ)
+    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ, tol)
 
     solver = iLQGameSolver.iLQSetup(Nx, Nu, Nplayer, NHor);
         

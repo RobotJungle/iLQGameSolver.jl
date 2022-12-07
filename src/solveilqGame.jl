@@ -20,8 +20,10 @@ mutable struct iLQStruct
 end
 
 function iLQSetup(Nx::Int64, Nu::Int64, Nplayer::Int64, NHor::Int64)
-    P = rand(NHor, Nu, Nx)*0.01
-    α = rand(NHor, Nu)*0.01
+    # P = rand(NHor, Nu, Nx)*0.01
+    # α = rand(NHor, Nu)*0.01
+    P = zeros(NHor, Nu, Nx)
+    α = zeros(NHor, Nu)
     Aₜ = zeros(Float32, (NHor, Nx, Nx))
     Bₜ = zeros(Float32, (NHor, Nx, Nu)) # Added
     Qₜ = zeros(Float32, (NHor, Nx*Nplayer, Nx))
@@ -72,7 +74,7 @@ function solveILQGame(game, solver, dynamics, costf, x0, terminal)
     βreg = 1.0 # Regularization parameter
     αscale = 0.5 # Linesearch parameter
     while !converged
-        converged = isConverged(xₜ, solver.x̂, tol = 1e-2)
+        converged = isConverged(xₜ, solver.x̂, tol = game.tol)
         total_cost = zeros(Nplayer) # Added
 
         for t = 1:(NHor-1)

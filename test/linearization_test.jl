@@ -23,7 +23,9 @@ include("2PlayerFunctions.jl")
     Q = sparse(zeros(Float32, Nx*Nplayer, Nx))
     Qn = sparse(zeros(Float32, Nx*Nplayer, Nx))
     R = sparse(zeros(Float32, Nu, Nu))
-    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ)
+
+    tol = 1e-4
+    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ, tol)
 
     x = zeros(Nx)
     u = zeros(Nu)
