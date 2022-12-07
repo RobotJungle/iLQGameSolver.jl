@@ -7,8 +7,10 @@ include("2PlayerFunctions.jl")
 @testset "Cost" begin
     # Setup the problem
     dt = 0.1                    # Step size [s]
-    H = 10.0                    # Horizon [s]
-    k_steps = Int(H/dt)         # Number of steps (knot points)
+    tf = 10.0                    # Horizon [s]
+    N = trunc(Int, tf/dt)         # Number of steps (knot points)
+
+    NHor = N
 
     # Define cost matrices 
     nx = 4 
@@ -48,8 +50,10 @@ include("2PlayerFunctions.jl")
     Rₜ = zeros(Float32, (Nu, Nu)) 
     rₜ = zeros(Float32, (Nu, Nplayer))
 
-    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, H, dmax, ρ);
+    tol = 1e-4
 
+    game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ, tol)
+    solver = iLQGameSolver.iLQSetup(Nx, Nu, Nplayer, NHor)
     # Initial state 
     x₀ = [5.0; 0.0; 0.0; 0.0; 
          0.0; 5.0; 0.0; 0.0]  

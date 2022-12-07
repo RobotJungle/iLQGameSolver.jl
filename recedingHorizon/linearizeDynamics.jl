@@ -17,6 +17,7 @@ Outputs:
     A: Linearized Discrete state matrix
     B: Linearized Discrete control input matrix
 """
+
 function linearDiscreteDynamics(game, dynamics, x, u)
     A = ForwardDiff.jacobian(dx -> dynamics(game, dx, u, true), x)
     B = ForwardDiff.jacobian(du -> dynamics(game, x, du, false), u)

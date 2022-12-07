@@ -32,7 +32,8 @@ A folder called iLQGameSolver should be created and it should contain the repo. 
 
 - Add documentation and write report
 
-- Receding horizon for online trajectory optimization
+- ~~Receding horizon for online trajectory optimization~~
+- Make tests for receeding horizon solver
 
 - Make a better GUI for the results
   - Graphical representation of the robots pose and shape in plots
@@ -43,11 +44,12 @@ A folder called iLQGameSolver should be created and it should contain the repo. 
 - ~~Integrate the linear approximation of the nonlinear dynamics for multiple agents (linearize and discretize)~~
     - ~~Check that the point mass works using both dynamics~~
 
-- Add state constraints
-
 - ~~Use differential drive kinematics to use on TurtleBots~~
 
 - Check augmented lagrangian dynamic programming for equality and inequality constraints
 
 - Monte Carlo simulations to observe Nash Equilibria solutions
+
+### Not important:
+- Add state constraints
 

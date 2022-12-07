@@ -3,11 +3,13 @@ using SparseArrays
 using InvertedIndices
 
 
-@testset "Point Mass" begin
-        # Setup the problem
+@testset "solveilqGame Test" begin
+   
+       # Setup the problem
+
         dt = 0.1                    # Step size [s]
-        H = 10.0                    # Horizon [s]
-        k_steps = Int(H/dt)         # Number of steps (knot points)
+        tf = 10.0                    # Horizon [s]
+        N = trunc(Int, tf/dt)         # Number of steps (knot points)
 
         # Define cost matrices 
         nx = 4 
@@ -39,8 +41,8 @@ using InvertedIndices
         R32 = sparse(0.0*I(2))     # Control cost for player 2 associated with player 1's controls
         R33 = sparse(1.0*I(2))     # Control cost for player 2 associated with player 1's controls
 
-        dmax = 2.5                  # Distance that both agents should keep between each other [m]
-        ρ = 500.0                   # Penalty factor for violating the distance constraint
+        dmax = 2.0                  # Distance that both agents should keep between each other [m]
+        ρ = 5000.0                   # Penalty factor for violating the distance constraint
 
         # Q's are stacked vertically
         Q = sparse(zeros(Float32, Nx*Nplayer, Nx))
@@ -58,52 +60,51 @@ using InvertedIndices
         #R .= [R11 R12; R21 R22]
         R .= [R11 R12 R13; R21 R22 R23; R31 R32 R33]
 
+        NHor = N
+        tol = 1e-2
 
-        game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, H, dmax, ρ);
+        game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, tf, NHor, dmax, ρ, tol)
+
+        solver = iLQGameSolver.iLQSetup(Nx, Nu, Nplayer, NHor)
+
+        solver.P = ones(NHor, Nu, Nx)*0.03
+        solver.α = ones(NHor, Nu)*0.03
 
         # Initial and final states
         # x₁, y₁, ̇x₁, ̇y₁, x₂, y₂, ̇x₂, ̇y₂       
 
-        # game = iLQGameSolver.GameSetup(nx, nu, Nplayer, Q, R, Qn, dt, H, dmax, ρ);
-        Nxi,Nxf,nui,nuf = iLQGameSolver.getPlayerIdx(game, 1)
-        @test Nxi == 1
-        @test Nxf == 12
-        @test nui == 1
-        @test nuf == 2
-
-
         x₀= [   5.0; 0.0; 0.0; 0.0; 
-                0.0; 5.0; 0.0; 0.0; 
-                0.0; 0.0; 0.0; 0.0] 
-                # Initial state
+        0.0; 5.0; 0.0; 0.0; 
+        0.0; 0.0; 0.0; 0.0] 
+        # Initial state
 
         xgoal = [   5.0; 10.0; 0.0; 0.0; 
-                10.0; 5.0; 0.0; 0.0; 
-                10.0; 10.0; 0.0; 0.0]   
-                # Final state
+        10.0; 5.0; 0.0; 0.0; 
+        10.0; 10.0; 0.0; 0.0]   
+        # Final state
 
         # Input constraints
         umax = [2.0, 2.0, 
-                2.0, 2.0, 
-                2.0, 2.0]   
+        2.0, 2.0, 
+        2.0, 2.0]   
 
         umin = [-2.0, -2.0, 
-                -2.0, -2.0, 
-                -2.0, -2.0]
+        -2.0, -2.0, 
+        -2.0, -2.0]
 
         ugoal = [   0.0, 0.0, 
-                0.0, 0.0,  
-                0.0, 0.0]     
+        0.0, 0.0,  
+        0.0, 0.0]     
 
         game.x0 .= x₀
         game.xf .= xgoal
         game.umin .= umin
         game.umax .= umax
-        game.uf .= ugoal
+        game.uf .= ugoal;
+        
+        X,U = iLQGameSolver.solveILQGame(game, solver, iLQGameSolver.pointMass, iLQGameSolver.costPointMass, x₀, true);
 
-        xₜ, uₜ = iLQGameSolver.solveILQGame(game, iLQGameSolver.pointMass, iLQGameSolver.costPointMass);
-
-        xend = xₜ[end,:]
+        xend = X[end,:,:]
 
         @test xend[1] ≈ xgoal[1] atol=1e-2 
         @test xend[2] ≈ xgoal[2] atol=1e-2 
@@ -116,6 +117,5 @@ using InvertedIndices
         @test xend[9] ≈ xgoal[9] atol=1e-2 
         @test xend[10] ≈ xgoal[10] atol=1e-2 
         @test xend[11] ≈ xgoal[11] atol=1e-2 
-        @test xend[12] ≈ xgoal[12] atol=1e-2  
-
+        @test xend[12] ≈ xgoal[12] atol=1e-2 
 end
