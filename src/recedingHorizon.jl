@@ -22,12 +22,14 @@ function recedingHorizon(game, solver, dynamics, costf)
     tstart = time_ns()
     # From 1 to the final time step
     for k = 1:N-1-NHor
-        X[k+1], U[k] = iLQGameSolver.solveILQGame(game, solver, dynamics, costf, k, X[k], false)
+        xₜ, uₜ = iLQGameSolver.solveILQGame(game, solver, dynamics, costf, k, X[k], false)
+        X[k+1], U[k] = xₜ[2,:,:], uₜ[1,:,:]
         println(k)
     end
     for k = N-NHor:N-1
-        X[k+1], U[k] = iLQGameSolver.solveILQGame(game, solver, dynamics, costf, k, X[k], true)
-        println(k)
+        xₜ, uₜ = iLQGameSolver.solveILQGame(game, solver, dynamics, costf, k, X[k], true)
+        X[k+1], U[k] = xₜ[2,:,:], uₜ[1,:,:]
+        #println(k)
     end
     tend = time_ns()
 

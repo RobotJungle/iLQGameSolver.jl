@@ -74,32 +74,32 @@ function solveILQGame(game, solver, dynamics, costf, kstart, x0, terminal)
     converged = false
 
     βreg = 1.0 # Regularization parameter
-    αscale = 0.5 # Linesearch parameter
+    αscale = 1.0 # Linesearch parameter
     while !converged
         converged = isConverged(xₜ, solver.x̂, tol = 1e-2)
         total_cost = zeros(Nplayer) # Added
 
-        if terminal
-            for t = kstart:N-1
-                # Obtain linearized discrete dynamics
-                Aₜ[t,:,:], Bₜ[t,:,:] = linearDiscreteDynamics(game, dynamics, xₜ[t,:], uₜ[t,:])
+        for t = 1:(NHor-1)
+            # Obtain linearized discrete dynamics
+            Aₜ[t,:,:], Bₜ[t,:,:] = linearDiscreteDynamics(game, dynamics, xₜ[t,:], uₜ[t,:])
 
-                # Obtain quadraticized cost function 
-                for i = 1:Nplayer
+            # Obtain quadraticized cost function 
+            for i = 1:Nplayer
 
-                    Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
+                Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
 
-                    costval, Qₜ[t,Nxi:Nxf,:], lₜ[t,:,i], Rₜ[t,nui:nuf,nui:nuf], 
-                    rₜ[t,nui:nuf,i], Rₜ[t,nui:nuf,Not(nui:nuf)], rₜ[t,Not(nui:nuf),i] = 
-                    quadraticizeCost(game, costf, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
-                    Qn[Nxi:Nxf,:], xₜ[t,:], uₜ[t,nui:nuf], uₜ[t, Not(nui:nuf)], false)
+                costval, Qₜ[t,Nxi:Nxf,:], lₜ[t,:,i], Rₜ[t,nui:nuf,nui:nuf], 
+                rₜ[t,nui:nuf,i], Rₜ[t,nui:nuf,Not(nui:nuf)], rₜ[t,Not(nui:nuf),i] = 
+                quadraticizeCost(game, costf, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
+                Qn[Nxi:Nxf,:], xₜ[t,:], uₜ[t,nui:nuf], uₜ[t, Not(nui:nuf)], false)
 
-                    while !isposdef(Qₜ[t,Nxi:Nxf,:])
-                        Qₜ[t,Nxi:Nxf,:] += βreg*I
-                    end
-                    total_cost[i] += costval
+                while !isposdef(Qₜ[t,Nxi:Nxf,:])
+                    Qₜ[t,Nxi:Nxf,:] += βreg*I
                 end
+                total_cost[i] += costval
             end
+        end
+        if terminal
             for i = 1:Nplayer
 
                 Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
@@ -111,41 +111,19 @@ function solveILQGame(game, solver, dynamics, costf, kstart, x0, terminal)
                 
                 total_cost[i] += costval
             end
-        else
-            for t = kstart:kstart+(NHor-1)
-                
-                # Obtain linearized discrete dynamics
-                Aₜ[t,:,:], Bₜ[t,:,:] = linearDiscreteDynamics(game, dynamics, xₜ[t,:], uₜ[t,:])
 
-                # Obtain quadraticized cost function 
-                for i = 1:Nplayer
+            # indx = kstart+NHor
+            # for i = 1:Nplayer
 
-                    Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
-
-                    costval, Qₜ[t,Nxi:Nxf,:], lₜ[t,:,i], Rₜ[t,nui:nuf,nui:nuf], 
-                    rₜ[t,nui:nuf,i], Rₜ[t,nui:nuf,Not(nui:nuf)], rₜ[t,Not(nui:nuf),i] = 
-                    quadraticizeCost(game, costf, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
-                    Qn[Nxi:Nxf,:], xₜ[t,:], uₜ[t,nui:nuf], uₜ[t, Not(nui:nuf)], false)
-
-                    while !isposdef(Qₜ[t,Nxi:Nxf,:])
-                        Qₜ[t,Nxi:Nxf,:] += βreg*I
-                    end
-                    total_cost[i] += costval
-                end
-            
-            end
-            indx = kstart+NHor
-            for i = 1:Nplayer
-
-                Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
+            #     Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
     
-                costval, Qₜ[indx,Nxi:Nxf,:], lₜ[indx,:,i], Rₜ[indx,nui:nuf,nui:nuf], 
-                rₜ[indx,nui:nuf,i], Rₜ[indx,nui:nuf,Not(nui:nuf)], rₜ[indx,Not(nui:nuf),i] = 
-                quadraticizeCost(game, costf, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
-                Qn[Nxi:Nxf,:], xₜ[indx,:], uₜ[indx,nui:nuf], uₜ[indx, Not(nui:nuf)], true)
+            #     costval, Qₜ[indx,Nxi:Nxf,:], lₜ[indx,:,i], Rₜ[indx,nui:nuf,nui:nuf], 
+            #     rₜ[indx,nui:nuf,i], Rₜ[indx,nui:nuf,Not(nui:nuf)], rₜ[indx,Not(nui:nuf),i] = 
+            #     quadraticizeCost(game, costf, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
+            #     Qn[Nxi:Nxf,:], xₜ[indx,:], uₜ[indx,nui:nuf], uₜ[indx, Not(nui:nuf)], true)
                 
-                total_cost[i] += costval
-            end
+            #     total_cost[i] += costval
+            # end
         end
 
         lqGame!(game, solver)
@@ -155,7 +133,9 @@ function solveILQGame(game, solver, dynamics, costf, kstart, x0, terminal)
 
         # Rollout players with new control law
         xₜ, uₜ = rolloutRK4(game, solver, dynamics, x0, αscale)
+        # xₜ[1,:,:] = xₜ[kstart,:,:]
+        # uₜ[1,:,:] = uₜ[kstart,:,:]
     end
 
-    return xₜ[kstart,:,:], uₜ[kstart,:,:]
+    return xₜ, uₜ#xₜ[2,:,:], uₜ[1,:,:]
 end
