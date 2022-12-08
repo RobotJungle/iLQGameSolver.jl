@@ -71,6 +71,7 @@ function lqGame!(game, solver)
     Y = solver.Y
     Yα = solver.Yα
 
+    # TODO: Refer to the equations in the report or textbook
     for t = (NHor-1):-1:1
         # solving for Ps,αs check equation 19 in document
         for i = 1:Nplayer
@@ -99,7 +100,7 @@ function lqGame!(game, solver)
             # update zeta
             ζ[:,i] = lₜ[t,:,i] + ((P[t,:,:]' * Rij * α[t,:]) - (P[t,:,:]' * rₜ[t,:,i])) + Fₜ'*(ζ[:,i] + (V[Nxi:Nxf,:] * βₜ))
 
-            # update value
+            # update value matrix
             V[Nxi:Nxf,:] = Qₜ[t,Nxi:Nxf,:] + (P[t,:,:]' * Rij * P[t,:,:]) + (Fₜ' * V[Nxi:Nxf,:] * Fₜ)
         end
         
