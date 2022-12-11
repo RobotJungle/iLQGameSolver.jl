@@ -112,7 +112,7 @@ end
 
 # Rollout dynamics with initial state x₀ and control law u = -Px - α
 # P is an n x b gain matrix and α is m x 1
-function rolloutRK4(game, solver, dynamics, x0, α_scale)
+function rolloutRK4(game, solver, dynamics, x0, α_scale, noise)
     nx = game.nx
     nu = game.nu
     Nplayer = game.Nplayer
@@ -139,7 +139,11 @@ function rolloutRK4(game, solver, dynamics, x0, α_scale)
         k2 = dynamics(game, xₜ[t,:] + 0.5*dt*k1, uₜ[t,:], true)
         k3 = dynamics(game, xₜ[t,:] + 0.5*dt*k2, uₜ[t,:], true)
         k4 = dynamics(game, xₜ[t,:] + dt*k3, uₜ[t,:], true)
-        xₜ[t+1,:] .= xₜ[t,:] + (dt/6.0)*(k1 + 2*k2 + 2*k3 + k4)
+        if noise
+            xₜ[t+1,:] .= xₜ[t,:] + (dt/6.0)*(k1 + 2*k2 + 2*k3 + k4) + rand(Nx)*0.01
+        else
+            xₜ[t+1,:] .= xₜ[t,:] + (dt/6.0)*(k1 + 2*k2 + 2*k3 + k4)
+        end
     end
     return xₜ, uₜ
 end

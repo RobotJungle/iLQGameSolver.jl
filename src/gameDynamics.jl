@@ -31,7 +31,7 @@ function pointMass(game, x, u, B)
         ÿ = -(c/m)*ẏ + u[nu*i]/m
         xₖ[1+(i-1)*nx:i*nx] = [ẋ; ẏ; ẍ; ÿ] 
     end
-    return xₖ #+ rand(Nx)*0.05
+    return xₖ #+ rand(Nx)*1.0
 end
 
 
