@@ -66,6 +66,27 @@ function costPointMass(game, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
 end
 
 
+function costQuadcopter(game, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
+
+    nx = game.nx
+    nu = game.nu
+    Nplayer = game.Nplayer
+
+    dx = x - game.xf
+    rel_dist = (x[1:3] - x[10:12])'*I*(x[1:3] - x[10:12])
+    if B 
+        return 0.5*dx'*Qni*dx
+    else            
+        nui = 1+(i-1)*nu     # Player i's control start index
+        nuf = i*nu           # Player i's control final index
+        dui = ui - game.uf[nui:nuf]
+        duj = uj - game.uf[Not(nui:nuf)]
+        return 0.5*(dx'*Qi*dx + dui'*Rii*dui + duj'*Rij*duj) + game.ρ*(min(sqrt(rel_dist) - game.dmax, 0))^2 
+        
+    end
+end
+
+
 """
     quadraticizeCost(game, cost_fun, i, Qi, Rii, Rij, Qni, x, ui, uj, B)
 
