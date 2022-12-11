@@ -67,12 +67,14 @@ function solveILQGame(game, solver, dynamics, costf, x0, terminal)
     rₜ = solver.rₜ
 
     # Rollout players, to obtain Initial feasible trajectory
-    xₜ, uₜ = rolloutRK4(game, solver, dynamics, x0, 0.0)
+    xₜ, uₜ = rolloutRK4(game, solver, dynamics, x0, 0.0, false)
 
     converged = false
 
     βreg = 1.0 # Regularization parameter
     αscale = 0.5 # Linesearch parameter
+    n_iters = 0 # Number of iterations
+    cpi = [] # cost per iteration
     while !converged
         converged = isConverged(xₜ, solver.x̂, tol = game.tol)
         total_cost = zeros(Nplayer) # Added
@@ -86,6 +88,9 @@ function solveILQGame(game, solver, dynamics, costf, x0, terminal)
 
                 Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
 
+                total_cost[i] += costPointMass(game, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)],
+                Qn[Nxi:Nxf,:], xₜ[t,:], uₜ[t,nui:nuf], uₜ[t, Not(nui:nuf)], false)
+
                 costval, Qₜ[t,Nxi:Nxf,:], lₜ[t,:,i], Rₜ[t,nui:nuf,nui:nuf], 
                 rₜ[t,nui:nuf,i], Rₜ[t,nui:nuf,Not(nui:nuf)], rₜ[t,Not(nui:nuf),i] = 
                 quadraticizeCost(game, costf, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
@@ -94,7 +99,7 @@ function solveILQGame(game, solver, dynamics, costf, x0, terminal)
                 while !isposdef(Qₜ[t,Nxi:Nxf,:])
                     Qₜ[t,Nxi:Nxf,:] += βreg*I
                 end
-                total_cost[i] += costval
+                #total_cost[i] += costval
             end
         end
         if terminal
@@ -102,12 +107,15 @@ function solveILQGame(game, solver, dynamics, costf, x0, terminal)
 
                 Nxi, Nxf, nui, nuf = getPlayerIdx(game, i) # get player i's indices
 
+                total_cost[i] += costPointMass(game, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)],
+                Qn[Nxi:Nxf,:], xₜ[end,:], uₜ[end,nui:nuf], uₜ[end, Not(nui:nuf)], true)
+
                 costval, Qₜ[end,Nxi:Nxf,:], lₜ[end,:,i], Rₜ[end,nui:nuf,nui:nuf], 
                 rₜ[end,nui:nuf,i], Rₜ[end,nui:nuf,Not(nui:nuf)], rₜ[end,Not(nui:nuf),i] = 
                 quadraticizeCost(game, costf, i, Q[Nxi:Nxf,:], R[nui:nuf,nui:nuf], R[nui:nuf,Not(nui:nuf)], 
                 Qn[Nxi:Nxf,:], xₜ[end,:], uₜ[end,nui:nuf], uₜ[end, Not(nui:nuf)], true)
                 
-                total_cost[i] += costval
+                #total_cost[i] += costval
             end
         end
 
@@ -117,8 +125,14 @@ function solveILQGame(game, solver, dynamics, costf, x0, terminal)
         solver.û = uₜ
 
         # Rollout players with new control law
-        xₜ, uₜ = rolloutRK4(game, solver, dynamics, x0, αscale)
+        xₜ, uₜ = rolloutRK4(game, solver, dynamics, x0, αscale, false)
+        n_iters += 1
+        # if n_iters > 700
+        #     converged = true
+        # end
+        push!(cpi, [n_iters, total_cost])
     end
+    #@show n_iters
 
-    return xₜ, uₜ
+    return xₜ, uₜ, cpi
 end

@@ -118,4 +118,21 @@ using InvertedIndices
         @test xend[10] ≈ xgoal[10] atol=1e-2 
         @test xend[11] ≈ xgoal[11] atol=1e-2 
         @test xend[12] ≈ xgoal[12] atol=1e-2 
+
+        xNoise, uNoise = iLQGameSolver.rolloutRK4(game, solver, iLQGameSolver.pointMass, x₀, 0.5, true)
+        xNend = xNoise[end,:,:]
+
+        @test xNend[1] ≈ xgoal[1] atol=1e0 
+        @test xNend[2] ≈ xgoal[2] atol=1e0 
+        @test xNend[3] ≈ xgoal[3] atol=1e-1 
+        @test xNend[4] ≈ xgoal[4] atol=1e-1 
+        @test xNend[5] ≈ xgoal[5] atol=1e0 
+        @test xNend[6] ≈ xgoal[6] atol=1e0 
+        @test xNend[7] ≈ xgoal[7] atol=1e-1 
+        @test xNend[8] ≈ xgoal[8] atol=1e-1 
+        @test xNend[9] ≈ xgoal[9] atol=1e0 
+        @test xNend[10] ≈ xgoal[10] atol=1e0 
+        @test xNend[11] ≈ xgoal[11] atol=1e-1 
+        @test xNend[12] ≈ xgoal[12] atol=1e-1 
+
 end
