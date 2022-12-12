@@ -6,7 +6,7 @@ This repo is inspired by [ilqgames](https://arxiv.org/abs/1909.04694), an effici
 
 It is still a work in progress. An example of a three point masses navigating at an intersection can be shown in the following GIF. 
 
-![Alt Text](examples/assets/three_agent.gif)
+![Alt Text](examples/assets/gifs/three_agent.gif)
 
 ## How to install for development
 
