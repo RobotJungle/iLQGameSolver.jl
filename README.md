@@ -24,10 +24,10 @@ A folder called iLQGameSolver should be created and it should contain the repo. 
 - ~~Generalize for multiple agents:~~
     - ~~Pass the dynamics function manually. Looping over each agent is inefficient.~~ 
 
-- Add documentation and write report
+- ~~Add documentation and write report~~
 
 - ~~Receding horizon for online trajectory optimization~~
-- Make tests for receeding horizon solver
+- ~~Make tests for receeding horizon solver~~
 
 - Make a better GUI for the results
   - Graphical representation of the robots pose and shape in plots
@@ -42,7 +42,7 @@ A folder called iLQGameSolver should be created and it should contain the repo. 
 
 - Check augmented lagrangian dynamic programming for equality and inequality constraints
 
-- Monte Carlo simulations to observe Nash Equilibria solutions
+- ~~Monte Carlo simulations to observe Nash Equilibria solutions~~
 
 ### Not important:
 - Add state constraints
