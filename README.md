@@ -4,30 +4,36 @@
 
 This repo is inspired by [ilqgames](https://arxiv.org/abs/1909.04694), an efficient iterative linear-quadratic approximations for nonlinear multi-player general-sum differential games. 
 
-It is still a work in progress. An example of a three point masses navigating at an intersection can be shown in the following GIF. 
-
 ![Alt Text](examples/assets/gifs/three_agent.gif)
 
 ## How to install for development
 
 Open the Julia REPL, enter the package manager using `]`, and run the following command to clone the code
 ```bash
-    dev https://github.com/itsahmedkhalil/iLQGameSolver.jl.git
+    dev https://github.com/RobotJungle/iLQGameSolver.jl
 ```
 
-A folder called iLQGameSolver should be created and it should contain the repo. Make changes and push your code.
+The iLQGameSolver repository should be cloned in your ``` ~/.julia/dev/ ``` directory. Make changes and push your code.
 
-## Todo list:
+## How to use:
+ 
+ Refer to the notebook files in the examples folder.
+
+## Limitations of implementation:
+- The solver is subject to failure given poor (randomly generated) initializations.
+- Code is not optimized.
+
+<!-- ## Todo list:
 
 ### Important:
 
 - ~~Generalize for multiple agents:~~
     - ~~Pass the dynamics function manually. Looping over each agent is inefficient.~~ 
 
-- Add documentation and write report
+- ~~Add documentation and write report~~
 
 - ~~Receding horizon for online trajectory optimization~~
-- Make tests for receeding horizon solver
+- ~~Make tests for receeding horizon solver~~
 
 - Make a better GUI for the results
   - Graphical representation of the robots pose and shape in plots
@@ -42,11 +48,11 @@ A folder called iLQGameSolver should be created and it should contain the repo. 
 
 - Check augmented lagrangian dynamic programming for equality and inequality constraints
 
-- Monte Carlo simulations to observe Nash Equilibria solutions
+- ~~Monte Carlo simulations to observe Nash Equilibria solutions~~
 
 ### Not important:
 - Add state constraints
 
 - Make cost functions user specified (not Qs and Rs)
 
-- Test cost functions with analytic Hessians and gradients
+- Test cost functions with analytic Hessians and gradients -->
